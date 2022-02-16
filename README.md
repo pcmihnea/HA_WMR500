@@ -1,5 +1,5 @@
 # What?
-(**WORK IN PROGRESS**) HomeAssistant integration of a Oregon Scientific WMR500C WiFi-enabled weather station.
+HomeAssistant integration of a Oregon Scientific WMR500C WiFi-enabled weather station.
  
 # Why?
 By design, the weather station works as a standalone unit, while it also supports relaying the measurements to a cloud server, which in turn interacts with the official [Android](https://play.google.com/store/apps/details?id=com.idthk.wmr500_v) or [iOS](https://apps.apple.com/us/app/smart-living-wmr500/id1332998208).  
@@ -70,9 +70,6 @@ The following steps are necessary only if the device is not yet connected to a W
 	- `cb7`= longitude (double): degreess.  
 	- `cb8`= city name (string): undefined.  
 - For example, to set the temperature unit to °C, publish to `enno/out/json/_GUUID_` with payload `{"command": "setSettings", "ca1": "1", "id": "DEBUG"}`.  
-- (**WORK IN PROGRESS**) To set the time and date, a HTTPS server is required to be deployed locally: 
-	- A request to `https://app.idtlive.com/api/time/iso_8601` should return a payload such as `{"time":"2022-01-01 00:00:00+2"}`.  
-	- A request to `https://app.idtlive.com/api/time/timestamp` should return a payload such as `{"time": 1640988000} `.  
 
 ## 3. Request the measurement values
 - To obtain the latest measurement values from the WMR500, publish to `enno/out/json/_GUUID_` the payload `{"command": "getChannel1Status", "id": "_GUUID_"}`.  
@@ -186,19 +183,19 @@ The following steps are necessary only if the device is not yet connected to a W
 ```
 - For example, `["data"]["6"]["indoor"]["w9"]["c91"]` will contain the current indoor temperature.  
 
-## 4. Configure the data relay
+## 4. (**WORK IN PROGRESS**) Configure the time server
 Since the integration relies on non-standard libraries, a [Home Assistant Docker installation](https://www.home-assistant.io/installation/linux#install-home-assistant-container) is assumed to be already working.  
 Also, a MQTT broker (for example Mosquitto) is also [installed](https://mosquitto.org/download), [configured](https://mosquitto.org/man/mosquitto-conf-5.html) and [accesible in HA](https://www.home-assistant.io/docs/mqtt/broker).  
 
-- Install the required python libraries: `sudo pip install Flask gunicorn paho_mqtt` ([why gunicorn?](https://flask.palletsprojects.com/en/2.0.x/deploying)).  
-- Edit the [`mqtt_wmr500.py`](scripts/mqtt_wmr500.py) file by configuring the user-specific values for the used MQTT broker (`MQTT_HOSTNAME`, `MQTT_USERNAME`, `MQTT_PASSWORD`, `MQTT_CLIENT_ID`), WMR500's GUUID (`MQTT_WMR500_GUUID`), and sampling period (`SAMPLE_INTERVAL`).  
+To keep the WMR500 time and date synchronized, a HTTPS server is required to be deployed locally, so that A GET request to `https://app.idtlive.com/api/time/iso_8601` shall respond with a payload such as `{"time":"2022-01-01 00:00:00+2"}`.   
+- Install the required python libraries: `sudo pip install Flask gunicorn` ([why gunicorn?](https://flask.palletsprojects.com/en/2.0.x/deploying)).  
 - Run the Python script as root: `sudo gunicorn mqtt_wmr500:app -b 0.0.0.0:443`.  
 - (Optional) Configure the script to run at startup, for example by adding it to `/etc/rc.local`.  
 
 ## 5. Configure the HomeAssistant instance
 - Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
 Take note of the `state_topic` value, where `wmr500` is a example that shall be subtituted with the exact value of `MQTT_CLIENT_ID` parameter set at step 3.  
-- Since the WMR500 reports a high number of measurements, over 55, user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
+Also, as the WMR500 reports a high number of measurements (over 55), user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
 ```
 sensor:
   - platform: mqtt
@@ -230,6 +227,24 @@ sensor:
     device_class: humidity
     unit_of_measurement: "%"
 ```
+
+- Add the following lines in `automations.yaml` file (present in the same configuration folder).  
+Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the automation), `trigger` (`seconds: /30` means every 30 seconds, for eg. 1 minute replace it with `minutes: /1`), and `_GUUID_` (WMR500's GUUID).  
+```
+- id: '_AUTOMATION_ID_'
+  alias: WMR500_Update_Trigger
+  description: ''
+  trigger:
+  - platform: time_pattern
+    seconds: /30
+  condition: []
+  action:
+  - service: mqtt.publish
+    data:
+      topic: enno/out/json/_GUUID_
+      payload: '{"command": "getChannel1Status", "id": "_GUUID_"}'
+  mode: single
+  ```
 - If all is well, after a HA restart the newly created sensors shall be available.
 
 # Who/where/when?
