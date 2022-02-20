@@ -2,6 +2,9 @@ from datetime import datetime
 
 from flask import Flask
 
+
+HTTP_PORT = 50007
+
 app = Flask(__name__)
 
 
@@ -12,6 +15,6 @@ def wmr500_1():
 
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port=443, ssl_context='adhoc')
+        app.run(host='0.0.0.0', port=HTTP_PORT)
     except Exception:
         pass

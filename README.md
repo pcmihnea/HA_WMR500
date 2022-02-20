@@ -183,16 +183,36 @@ The following steps are necessary only if the device is not yet connected to a W
 ```
 - For example, `["data"]["6"]["indoor"]["w9"]["c91"]` will contain the current indoor temperature.  
 
-## 4. (**WORK IN PROGRESS**) Configure the time server
+## 4. (OPTIONAL) Patching the device
+- To keep the WMR500 time and date synchronized, a HTTPS server is required to be deployed locally, so that A GET request to `https://app.idtlive.com/api/time/iso_8601` shall respond with a payload such as `{"time":"2022-01-01 00:00:00+0"}`.  
+- To masquerade the official HTTPS server, the official [certificate private key](https://en.wikipedia.org/wiki/HTTPS#Server_setup) is required to sign the local server's TLS connection - unfortunately this is not possible due to obvious security issues (and lack of support from manufacturer).  
+- The only solution is to modify the embedded software (firmware) on the WMR500 base station, so that it either:  
+	- uses a different public key (and/or certificate) to authenticate the local server - the key (certificate) will need to be update each time the server setup change, which is not feasable,  
+	- uses unsecured HTTP instead of HTTPS - no certification required, the local server can be (re)deployed without any further setup on the WMR500.  
+- To perform the changes, the firmware onboard the WMR500's main microntroller, an [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html), needs to be extracted,  process which requires:
+	- A SWD-compatible flasher, such as [J-Link](https://www.segger.com/products/debug-probes/j-link/) or other [OpenOCD-compatible](https://openocd.org/pages/documentation.html) tools,  
+	- Connection to the WMR500 board, by removing the front bezel, unscrewing 6 screws, and soldering five signals available on the middle of the board - top-to-bottom pinout: `VCC`, `SWDIO`, `SWCLK`, `RESET`, and `GND`.  
+<br><img src="docs/media/case_bezel.png" width="400"/>
+<img src="docs/media/pcb_topside.png" width="400"/><br>
+
+- Once the firmware is obtained, using the tool [Ghidra](https://github.com/NationalSecurityAgency/ghidra) for decompilation and analysis, the function calls used for enabling TLS are identified and patched (replaced). Additionally, the HTTP port can be changed from the default `443` to any other valid number.  
+- For a device that reports the firmware version as `1490` (value of the key `c82` in the response obtained when requesting the measurement values), the following binary changes are to be made:  
+	- Branch instruction (`BL`) at address `0x0801b614`, responsible for TLS context initialization, replaced with `NOP`,  
+	- Branch instruction (`BL`) at address `0x0801b628`, responsible for TLS enabling, replaced with `NOP`,  
+	- (OPTIONAL) Immediate value of Move Top instruction (`MOVW`) at address `0x0801b630`, responsible for loading the port number, replaced with the new value (for example `50007`).  
+- Once the firmware is patched, flashing it on the base unit will enable the modifications - a firmware image with all modifications is included [on this repo](firmware/wmr500_1490_patched.hex).  
+
+## 5. (OPTIONAL) Configure the time server
 Since the integration relies on non-standard libraries, a [Home Assistant Docker installation](https://www.home-assistant.io/installation/linux#install-home-assistant-container) is assumed to be already working.  
 Also, a MQTT broker (for example Mosquitto) is also [installed](https://mosquitto.org/download), [configured](https://mosquitto.org/man/mosquitto-conf-5.html) and [accesible in HA](https://www.home-assistant.io/docs/mqtt/broker).  
 
-To keep the WMR500 time and date synchronized, a HTTPS server is required to be deployed locally, so that A GET request to `https://app.idtlive.com/api/time/iso_8601` shall respond with a payload such as `{"time":"2022-01-01 00:00:00+2"}`.   
+- The following steps are applicable only for a [patched device](#user-content-4-optional-patching-the-device).  
 - Install the required python libraries: `sudo pip install Flask gunicorn` ([why gunicorn?](https://flask.palletsprojects.com/en/2.0.x/deploying)).  
-- Run the Python script as root: `sudo gunicorn mqtt_wmr500:app -b 0.0.0.0:443`.  
+- Edit the `http_wmr500.py` file by configuring the HTTP port (`HTTP_PORT`) patched on the device.  
+- Run the Python script as root: `sudo gunicorn http_wmr500:app -b 0.0.0.0:50007`, where `50007` is the HTTP port.  
 - (Optional) Configure the script to run at startup, for example by adding it to `/etc/rc.local`.  
 
-## 5. Configure the HomeAssistant instance
+## 6. Configure the HomeAssistant instance
 - Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
 Take note of the `state_topic` value, where `wmr500` is a example that shall be subtituted with the exact value of `MQTT_CLIENT_ID` parameter set at step 3.  
 Also, as the WMR500 reports a high number of measurements (over 55), user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
