@@ -54,8 +54,9 @@ Also, a MQTT broker (for example Mosquitto) is also [installed](https://mosquitt
 - Run `sudo tshark -i eth0 -f "tcp port 1883" -Y 'mqtt.passwd' -V` to begin capturing all MQTT connect packets - modify the target network interface based on actual local server setup (for example `eth0`, or `wlan0`).  
 - Trigger a full WiFi reconnection (cold-boot) by removing the batteries and USB power for at least 10 seconds, then replacing them.  
 - After around a minute, the packet analysis of a MQTT connection attempt should be displayed in the console - take note of the `Client ID` (same as GUUID) and `Password` values on the last lines.  
-- If no MQTT connect packets are received, check that the local MQTT broker is running and its authentication method is configured with at least one [password file](https://mosquitto.org/documentation/authentication-methods/) - use a desktop [MQTT client](http://mqtt-explorer.com/) to verify connection is possible with the set user/password credentials.  
-- Add the authentication credentials to the MQTT broker allowed users list.  
+- If no MQTT connect packets are received, check that the local MQTT broker is running and its authentication method is configured with a [password file or the `allow_anonymous` option](https://mosquitto.org/documentation/authentication-methods/) - use a desktop [MQTT client](http://mqtt-explorer.com/) to verify if connection with the set user/password credentials is possible.  
+- Add the extracted authentication credentials to the MQTT broker's allowed users list.  
+- Confirm the device is connected by running the command: `netstat -ntp | grep ESTABLISHED.*mosquitto` (for Mosquitto MQTT broker installs) - a WMR500 and/or local server restart may be required.  
 - Once the device is succesfully connected to both WiFi and a local MQTT server, commands can be issued by any MQTT client that publishes to the `enno/out/json/_GUUID_` topic, where `_GUUID_` is the 36-chars GUUID (and also client ID) obtained earlier.  
 - The device responds to commands by publishing to the `enno/in/json` topic.  
 - A number of non-volatile parameters can be set on the main unit, using the payload `{"command": "setSettings", "XX": "YY", "id": "DEBUG"}`, where `XX` is the parameter name, and `YY` the new value. Known parameters are:  
@@ -69,8 +70,8 @@ Also, a MQTT broker (for example Mosquitto) is also [installed](https://mosquitt
 	- `cb2`= time format (integer): 0=12H, 1=24H.  
 	- `cb3`= language (integer): 0=EN, 1=FR, 2=GE, 3=IT, 4=ES, 5=RU.  
 	- `cb4`= hemisphere (integer): 0=north, 1=south.  
-	- `cb6`= latitude (double): degreess.  
-	- `cb7`= longitude (double): degreess.  
+	- `cb6`= latitude (double): degrees.  
+	- `cb7`= longitude (double): degrees.  
 	- `cb8`= city name (string): undefined.  
 - For example, to set the temperature unit to °C, publish to `enno/out/json/_GUUID_` with payload `{"command": "setSettings", "ca1": "1", "id": "DEBUG"}`.  
 
