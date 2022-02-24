@@ -12,6 +12,9 @@ Since reverse-engineering software may pose a infringement on copyrights, no bin
 Instead, it is fully up to the responsibility of the user whether to reproduce the results.  
 
 ## 1. Configure the cloud service replacements
+Since the integration relies on non-standard libraries, a [Home Assistant Docker installation](https://www.home-assistant.io/installation/linux#install-home-assistant-container) is assumed to be already working.  
+Also, a MQTT broker (for example Mosquitto) is also [installed](https://mosquitto.org/download), [configured](https://mosquitto.org/man/mosquitto-conf-5.html) and [accesible in HA](https://www.home-assistant.io/docs/mqtt/broker).  
+
 - The WMR500's main base relies on at least two remote services, a HTTPS server [`app.idtlive.com`](https://app.idtlive.com) and a MQTT broker [`mqtt.idtlive.com`](mqtt://mqtt.idtlive.com:1883).  
 - Since neither are available anymore, new ones need to be deployed locally, and traffic to be redirected to them instead.  
 - For traffic redirection, i.e. a local static DNS entry, there is one easy way that doesn't rely on network routers with complex features:
@@ -37,9 +40,8 @@ Instead, it is fully up to the responsibility of the user whether to reproduce t
 	- All local devices that rely on DHCP IP address assignments will now include the two DNS server addresses, 192.168.0.2 (which will resolve only `app.idtlive.com` and `mqtt.idtlive.com`) and 192.168.0.1 (which will resolve all other DNS queries).  
 
 ## 2. Configure the device
-The following steps are necessary only if the device is not yet connected to a WiFi access-point, or a fresh start (cleared settings and statistics) is wanted.  
-- Reset the device to factory settings by holding both the `up` and `down` buttons on the unit for 6 seconds.  
-- Pair all external compatible sensors, by holding the `Pair` button, selecting option (2) using the `down` button, then pressing `pair`.  
+- (Optional) Reset the device to factory settings by holding both the `up` and `down` buttons on the unit for 6 seconds.  
+- (Optional) Pair all external compatible sensors, by holding the `Pair` button, selecting option (2) using the `down` button, then pressing `pair`.  
 - Generate the Wifi configuration string using the script [`wifi_auth_gen.py`](scripts/wifi_auth_gen.py) - replace `WIFI_SSID` and `WIFI_PASSWD` values inside the file with your WiFi credentials.  
 - The config string has the following structure: `WMR500C(xxAAAAA,yyBBBBB)`, where `AAAAA` is the SSID, `xx` the number of characters in the SSID (ignoring whitespaces), `BBBBB` the password, and `yy` the number of chars in the password, for example:  
 	`WMR500C(04SSID,08PASSWORD)`
@@ -48,10 +50,11 @@ The following steps are necessary only if the device is not yet connected to a W
 - Using a Telnet client (such as [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or [Realterm](https://realterm.i2cchip.com/)), connect to the server `192.168.10.1:50007`.  
 - After sending the authentication string previously generated, the device responds with its GUUID and model name - take note of the first 36-chars value, as it will be used in the following steps.  
 - Send a string containing `CONFIRM` to finalize the WiFi setup.  
-- To allow the device to connect to the local MQTT server, its password needs to be obtained - since it's using the unsecured MQTT protocol, it can easily be sniffer using [Wireshark's](https://www.wireshark.org) TShark [command line](https://www.wireshark.org/docs/man-pages/tshark.html) - install it using `sudo apt install tshark`.  
-- Run `sudo tshark -i eth0 -f "tcp port 1883" -Y 'mqtt.passwd' -V` to begin capturing all MQTT connect packets.  
-- Trigger a full WiFi reconnection by removing the batteries and USB power for 2 seconds, then replacing them.  
-- After less than a minute, the packet analysis of a MQTT connection attempt should be displayed in the console - take note of the `Client ID` (same as GUUID) and `Password` values on the last lines.  
+- To allow the device to connect to the local MQTT server, its password needs to be obtained - since it's using the unsecured MQTT protocol, it can easily be sniffed using [Wireshark's](https://www.wireshark.org) TShark [command line](https://www.wireshark.org/docs/man-pages/tshark.html) - install it using `sudo apt install tshark`.  
+- Run `sudo tshark -i eth0 -f "tcp port 1883" -Y 'mqtt.passwd' -V` to begin capturing all MQTT connect packets - modify the target network interface based on actual local server setup (for example `eth0`, or `wlan0`).  
+- Trigger a full WiFi reconnection (cold-boot) by removing the batteries and USB power for at least 10 seconds, then replacing them.  
+- After around a minute, the packet analysis of a MQTT connection attempt should be displayed in the console - take note of the `Client ID` (same as GUUID) and `Password` values on the last lines.  
+- If no MQTT connect packets are received, check that the local MQTT broker is running and its authentication method is configured with at least one [password file](https://mosquitto.org/documentation/authentication-methods/) - use a desktop [MQTT client](http://mqtt-explorer.com/) to verify connection is possible with the set user/password credentials.  
 - Add the authentication credentials to the MQTT broker allowed users list.  
 - Once the device is succesfully connected to both WiFi and a local MQTT server, commands can be issued by any MQTT client that publishes to the `enno/out/json/_GUUID_` topic, where `_GUUID_` is the 36-chars GUUID (and also client ID) obtained earlier.  
 - The device responds to commands by publishing to the `enno/in/json` topic.  
@@ -189,7 +192,7 @@ The following steps are necessary only if the device is not yet connected to a W
 - The only solution is to modify the embedded software (firmware) on the WMR500 base station, so that it either:  
 	- uses a different public key (and/or certificate) to authenticate the local server - the key (certificate) will need to be update each time the server setup change, which is not feasable,  
 	- uses unsecured HTTP instead of HTTPS - no certification required, the local server can be (re)deployed without any further setup on the WMR500.  
-- To perform the changes, the firmware onboard the WMR500's main microntroller, an [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html), needs to be extracted,  process which requires:
+- To perform the changes, the firmware onboard the WMR500's main microntroller, an [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html), needs to be extracted, process which requires:
 	- A SWD-compatible flasher, such as [J-Link](https://www.segger.com/products/debug-probes/j-link/) or other [OpenOCD-compatible](https://openocd.org/pages/documentation.html) tools,  
 	- Connection to the WMR500 board, by removing the front bezel, unscrewing 6 screws, and soldering five signals available on the middle of the board - top-to-bottom pinout: `VCC`, `SWDIO`, `SWCLK`, `RESET`, and `GND`.  
 <br><img src="docs/media/case_bezel.png" width="400"/>
@@ -203,9 +206,6 @@ The following steps are necessary only if the device is not yet connected to a W
 - Once the firmware is patched, flashing it on the base unit will enable the modifications - a firmware image with all modifications is included [on this repo](firmware/wmr500_1490_patched.hex).  
 
 ## 5. (OPTIONAL) Configure the time server
-Since the integration relies on non-standard libraries, a [Home Assistant Docker installation](https://www.home-assistant.io/installation/linux#install-home-assistant-container) is assumed to be already working.  
-Also, a MQTT broker (for example Mosquitto) is also [installed](https://mosquitto.org/download), [configured](https://mosquitto.org/man/mosquitto-conf-5.html) and [accesible in HA](https://www.home-assistant.io/docs/mqtt/broker).  
-
 - The following steps are applicable only for a [patched device](#user-content-4-optional-patching-the-device).  
 - Install the required python libraries: `sudo pip install Flask gunicorn` ([why gunicorn?](https://flask.palletsprojects.com/en/2.0.x/deploying)).  
 - Edit the `http_wmr500.py` file by configuring the HTTP port (`HTTP_PORT`) patched on the device.  
