@@ -204,7 +204,7 @@ Also, a MQTT broker (for example Mosquitto) is also [installed](https://mosquitt
 	- Branch instruction (`BL`) at address `0x0801b614`, responsible for TLS context initialization, replaced with `NOP`,  
 	- Branch instruction (`BL`) at address `0x0801b628`, responsible for TLS enabling, replaced with `NOP`,  
 	- (OPTIONAL) Immediate value of Move Top instruction (`MOVW`) at address `0x0801b630`, responsible for loading the port number, replaced with the new value (for example `50007`).  
-- Once the firmware is patched, flashing it on the base unit will enable the modifications - a firmware image with all modifications is included [on this repo](firmware/wmr500_1490_patched.hex).  
+- Once the firmware is patched, flashing it back on the WMR500 base unit will enable the modifications.  
 
 ## 5. (OPTIONAL) Configure the time server
 - The following steps are applicable only for a [patched device](#user-content-4-optional-patching-the-device).  
