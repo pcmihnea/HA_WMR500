@@ -3,32 +3,35 @@ HomeAssistant integration of a Oregon Scientific WMR500C WiFi-enabled weather st
  
 # Why?
 By design, the weather station works as a standalone unit, while it also supports relaying the measurements to a cloud server, which in turn interacts with the official [Android](https://play.google.com/store/apps/details?id=com.idthk.wmr500_v) or [iOS](https://apps.apple.com/us/app/smart-living-wmr500/id1332998208) applications.  
-Hardware-wise, the device has no usable external interfaces besides the charge-only USB port and the WiFi interface.  
+Hardware-wise, the device has no other usable external interfaces, besides the charge-only USB port and the WiFi interface.  
+
 Ever since the middle of 2021, the cloud services are no longer available, thus rendering the smartphone apps useless. Fortunately, part of these services can be masqueraded to allow local sampling of measurement values.  
 No (official) documentation regarding (third-party) integration is available - the information contained in this repo is based on reverse-engineering efforts.  
 
 # How?
 Since reverse-engineering software may pose a infringement on copyrights, it is full responsibility of the user whether to reproduce the results or not.  
+
 In the following steps, the main unit will be referenced as `WMR500` or `device`.  
 
 ## 1. Define the cloud services replacements
 Since the integration relies on non-standard libraries, a [Home Assistant Docker installation](https://www.home-assistant.io/installation/linux#install-home-assistant-container) is assumed to be already working.  
 Also, a MQTT broker (for example Mosquitto) is also [installed](https://mosquitto.org/download), [configured](https://mosquitto.org/man/mosquitto-conf-5.html) and [accessible in HA](https://www.home-assistant.io/docs/mqtt/broker).  
+
 The WMR500's main base relies on at least two cloud services, a HTTPS server [`app.idtlive.com`](https://app.idtlive.com) and a MQTT broker [`mqtt.idtlive.com`](mqtt://mqtt.idtlive.com:1883).  
 Since neither are available anymore, new ones need to be deployed locally, and WMR500's traffic to be redirected to them instead.  
+
 For traffic routing, a local static DNS entry is required - one method that doesn't depend on more advanced network routers is to:
-	- Install a DNS server on a user server, configuring it to assign DNS translation to local IP addresses,  
-	- Configure the network router's DHCP server's advertised secondary DNS server to the user server IP address.  
+- Install a DNS server on a user server, configuring it to assign DNS translation to local IP addresses,  
+- Configure the network router's DHCP server's advertised secondary DNS server to the user server IP address.  
 
 As a example, a RaspberryPi4B+ running HomeAssistant, and assigned a IP address of 192.168.0.2, connected to a router with LAN address 192.168.0.1:  
-	- Install on the RaspberryPi a DNS server using: `sudo apt install dnsmasq`.  
-	- Configure the DNS server by adding the following lines to `/etc/dnsmasq.conf`:
+- Install on the RaspberryPi a DNS server using: `sudo apt install dnsmasq`.  
+- Configure the DNS server by adding the following lines to `/etc/dnsmasq.conf`:
 		```
 		address=/app.idtlive.com/192.168.0.2
 		address=/mqtt.idtlive.com/192.168.0.2
 		```
-		
-	- Optionally, to further improve network performance, add the following lines (only if the RaspberryPi is connected via wired Ethernet):
+- Optionally, to further improve network performance, add the following lines (only if the RaspberryPi is connected via wired Ethernet):
 		```
 		no-hosts
 		no-resolv
@@ -36,17 +39,15 @@ As a example, a RaspberryPi4B+ running HomeAssistant, and assigned a IP address 
 		interface=eth0
 		no-dhcp-interface=eth0
 		```
-		
-	- Reboot the RaspberryPi.  
-	- On the main router set the secondary DNS server address to 192.168.0.2 - if necessary set the primary DNS server entry to the router's LAN IP address (for eg. 192.168.0.1).  
-	- All local devices that rely on DHCP IP address assignments will now have the two DNS server addresses advertised to, 192.168.0.2 (which will resolve only `app.idtlive.com` and `mqtt.idtlive.com`) and 192.168.0.1 (which will resolve all other DNS queries).  
+- Reboot the RaspberryPi.  
+- On the main router set the secondary DNS server address to 192.168.0.2 - if necessary set the primary DNS server entry to the router's LAN IP address (for eg. 192.168.0.1).  
+- All local devices that rely on DHCP IP address assignments will now have the two DNS server addresses advertised to, 192.168.0.2 (which will resolve only `app.idtlive.com` and `mqtt.idtlive.com`) and 192.168.0.1 (which will resolve all other DNS queries).  
 
 ## 2. Configure the device
 - (Optional) Reset the WMR500 to factory settings by holding both the `up` and `down` buttons on the unit for 6 seconds.  
 - (Optional) Pair all external compatible sensors, by holding the `Pair` button, selecting option (2) using the `down` button, then pressing `pair`.  
 - Generate the Wifi configuration string using the script [`wifi_auth_gen.py`](scripts/wifi_auth_gen.py) - replace the `WIFI_SSID` and `WIFI_PASSWD` values inside the file with own WiFi credentials.  
-The config string has the structure `WMR500C(xxAAAAA,yyBBBBB)`, where `AAAAA` is the SSID, `xx` the number of characters in the SSID (excluding whitespaces), `BBBBB` the password, and `yy` the number of chars in the password.
-Example: `WMR500C(04SSID,08PASSWORD)`.
+The config string has the structure `WMR500C(xxAAAAA,yyBBBBB)`, where `AAAAA` is the SSID, `xx` the number of characters in the SSID (excluding whitespaces), `BBBBB` the password, and `yy` the number of chars in the password, for example: `WMR500C(04SSID,08PASSWORD)`.
 - Enter WiFi pairing by holding the `Pair` button, then pressing `Pair` again.  
 - Connect any computer to the `OS_WMR500C_****` WiFi access point using WPA2 password `12345678`.  
 - Using a Telnet client, such as [Putty](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) or [MobaXterm](https://mobaxterm.mobatek.net/download-home-edition.html), connect to the server `192.168.10.1:50007`.  
@@ -56,10 +57,10 @@ Example: `WMR500C(04SSID,08PASSWORD)`.
 - Install the tool using `sudo apt install tshark`, then run it via `sudo tshark -i eth0 -f "tcp port 1883" -Y 'mqtt.passwd' -V` to begin capturing all MQTT connect packets - modify the target network interface based on actual local server setup (for example `eth0` for wired network, or `wlan0` for wireless).  
 - Trigger a full WiFi reconnection (cold-boot) by removing the batteries and USB power for at least 10 seconds, then replacing them.  
 - After around a minute, the packet analysis of a MQTT connection attempt should be displayed in the console - take note of the `Client ID` (same as GUUID) and `Password` values on the last lines.  
-If no MQTT connect packets are received, check that the local MQTT broker is running and its authentication method is configured with a [password file or the `allow_anonymous` option](https://mosquitto.org/documentation/authentication-methods/) - use a desktop [MQTT client](http://mqtt-explorer.com/) to verify if connection with the set user/password credentials is possible.  
+Note - If no MQTT connect packets are received, check that the local MQTT broker is running and its authentication method is configured with a [password file or the `allow_anonymous` option](https://mosquitto.org/documentation/authentication-methods/) - use a desktop [MQTT client](http://mqtt-explorer.com/) to verify if connection with the set user/password credentials is possible.  
 - Add the extracted authentication credentials to the MQTT broker's allowed users list.  
 - Confirm the WMR500 is connected by running the command: `netstat -ntp | grep ESTABLISHED.*mosquitto` (only if using a Mosquitto MQTT broker).  
-If the command doesn't return any value, a restart of WMR500 and/or local server may be required.  
+Note - If the command doesn't return any value, a restart of WMR500 and/or local server may be required.  
 - Once the WMR500 is successfully connected to both WiFi and a local MQTT server, commands can be issued by any MQTT client that publishes to the `enno/out/json/_GUUID_` topic, where `_GUUID_` is the 36-chars GUUID previously obtained.  
 - The WMR500 reacts to commands by publishing its responses on the `enno/in/json` topic.  
 - A number of non-volatile parameters can be set on the main unit, using the payload `{"command": "setSettings", "XX": "YY", "id": "DEBUG"}`, where `XX` is the parameter name, and `YY` the new value.  
@@ -81,6 +82,7 @@ For example, to set the temperature unit to °C, publish to `enno/out/json/_GUUI
 ## 3. Request the measurement values
 - To obtain the latest measurement values from the WMR500, publish to `enno/out/json/_GUUID_` the payload `{"command": "getChannel1Status", "id": "_GUUID_"}` (replace `_GUUID_` with the 36-chars GUUID).  
 - The WMR500 will publish the response to `enno/in/json/`, with a JSON payload of a fixed structure, containing a number of keys, as shown below.  
+
 To ease documenting the JSON contents, the numeric values have been replaced with a dictionary containing the label, data type, and unit for each known parameter - a number of `_COMMENT_` key/value pairs were added to improve clarity.  
 As a rule, the values of interest have the keys with the naming format of `cXXX`, where `XXX` is a 2-3 digit number.  
 ```json
@@ -188,28 +190,30 @@ As a rule, the values of interest have the keys with the naming format of `cXXX`
   }
 }
 ```
-
 - For example, `["data"]["6"]["indoor"]["w9"]["c91"]` will contain the current indoor temperature.  
 
 ## 4. (OPTIONAL) Patch the device firmware
 To keep the WMR500 time and date synchronized, a HTTPS server is required to be deployed locally, so that a GET request to `https://app.idtlive.com/api/time/iso_8601` shall be responded with a payload of `{"time":"2022-01-01 00:00:00+0"}`.  
+
 In order to masquerade the original HTTPS server, the official [certificate private key](https://en.wikipedia.org/wiki/HTTPS#Server_setup) is mandatory to sign the local server's TLS connection - unfortunately this is not possible due to obvious security issues (and also lack of support from manufacturer).  
 The only solution is to modify the embedded software (firmware) on the WMR500 base station, so that it either:  
-	- Uses a different public key (and/or certificate) to authenticate the local server - the key (certificate) will need to be update each time the server setup change, which may not be feasible, or
-	- Uses unsecured HTTP instead of HTTPS - no certification required, the local server can be (re)deployed without any further changes on the WMR500.  
-- To perform the changes, the firmware onboard the WMR500's main microcontroller, an [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html), needs to be extracted, process which requires:
-	- A SWD-compatible flasher, such as [J-Link](https://www.segger.com/products/debug-probes/j-link/) or other [OpenOCD-compatible](https://openocd.org/pages/documentation.html) tools,  
-	- Connection to the WMR500 board, by removing the front bezel, unscrewing 6 screws, and soldering five signals available on the middle of the board - top-to-bottom pinout: `VCC`, `SWDIO`, `SWCLK`, `RESET`, and `GND`.  
+- Uses a different public key (and/or certificate) to authenticate the local server - the key (certificate) will need to be update each time the server setup change, which may not be feasible, or  
+- Uses unsecured HTTP instead of HTTPS - no certification required, the local server can be (re)deployed without any further changes on the WMR500.  
+
+To perform the changes, the firmware onboard the WMR500's main microcontroller, an [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html), needs to be extracted, process which requires:  
+- Connection to the WMR500 board, by removing the front bezel, unscrewing 6 screws, and soldering five signals available on the middle of the board - pinout from top to bottom: `VCC`, `SWDIO`, `SWCLK`, `RESET`, and `GND`,  
 <br><img src="docs/media/case_bezel.png" width="400"/>
 <img src="docs/media/pcb_topside.png" width="400"/><br>
+- A SWD-compatible flasher, such as [J-Link](https://www.segger.com/products/debug-probes/j-link/) or other [OpenOCD-compatible](https://openocd.org/pages/documentation.html) tool.   
 If using a J-Link, one may dump the complete firmware as a binary file by means of the included [command-line utility](https://wiki.segger.com/J-Link_Commander) via command `SaveBin C:\wmr500_firmware.bin 0x00 0x80000`.  
-- Once the firmware is obtained, using the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) tool for disassembly and analysis, the function calls used for enabling TLS are identified and patched - additionally, the HTTP port can be changed from the default `443` to any other valid number.  
-See [following chapter](#user-content-7-optional-further-firmware-analysis) for a complete workspace setup.  
-For a WMR500 that reports the firmware version as `1490` (value of the key `c82` in the response obtained when requesting the measurement values), the following binary changes are to be made:  
+- Once the firmware is obtained, using the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) tool for disassembly and analysis, the function calls used for enabling TLS are identified and patched - additionally, the HTTP port can be changed from the default `443`.  
+To reproduce the complete workspace setup, see [following chapter](#user-content-7-optional-further-firmware-analysis).  
+For a WMR500 that reports the firmware version as `1490` (as value or the key `c82` in the response obtained when [requesting the measurement values](#user-content-3-request-the-measurement-values)), the following binary changes are to be made:  
 	- Branch instruction (`BL`) at address `0x0801b614`, responsible for TLS context initialization, to be replaced with `NOP`,  
 	- Branch instruction (`BL`) at address `0x0801b628`, responsible for TLS enabling, to be replaced with `NOP`,  
 	- (OPTIONAL) Immediate value of Move Top instruction (`MOVW`) at address `0x0801b630`, responsible for loading the port number, to be replaced with the new value (for example `50007`).  
-- After modifying the firmware, flashing it back on the WMR500 will enable the changes - a fully-patched firmware image is included [in this repo](firmware/wmr500_1490_patched.hex)
+- After modifying the firmware, flashing it back on the WMR500 will enable the changes.  
+A fully-patched firmware image is included [in this repo](firmware/wmr500_1490_patched.hex).
 
 ## 5. (OPTIONAL) Configure the time server
 The following steps are applicable only for a [patched WMR500](#user-content-4-optional-patch-the-device-firmware).  
@@ -252,7 +256,6 @@ sensor:
     device_class: humidity
     unit_of_measurement: "%"
 ```
-
 - Add the following lines in `automations.yaml` file (present in the same configuration folder).  
 Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the automation), `trigger` (`seconds: /30` means every 30 seconds, for 1 minute use `minutes: /1`), and `_GUUID_` (WMR500's GUUID).  
 ```
@@ -270,14 +273,14 @@ Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the 
       payload: '{"command": "getChannel1Status", "id": "_GUUID_"}'
   mode: single
   ```
-  
 - If all is well, after a HA restart the newly created sensors shall be available.
 
 ## 7. (OPTIONAL) Further firmware analysis
-All the previous steps were documented based on findings from decompiling/disassembly of both the Android app and the WMR500's firmware.
-As to be expected, there are many unknown features and known issues still to be addressed.
-One example is when the WMR500 randomly stops working correctly (no longer publishes on any MQTT topics), thus requiring a hardware reboot (power cycle).
-To further enhance the overall functionality by means of firmware analysis, one may setup a reverse-engineering environment, based on the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) software solution.
+All the previous steps were documented based on findings from decompiling/disassembly of both the Android app and the WMR500's firmware.  
+As to be expected, there are many unknown features and known issues still to be addressed.  
+One example is when the WMR500 randomly stops working correctly (no longer publishes on any MQTT topics), thus requiring a hardware reboot (power cycle).  
+
+To further enhance the overall functionality by means of firmware analysis, one may setup a reverse-engineering environment, based on the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) software solution.  
 - Once [installed and run](https://github.com/NationalSecurityAgency/ghidra#install), create a new Non-shared Project via `File` -> `New project`.  
 - Via `File` -> `Import File`, select the binary file obtained from [previous chapter](#user-content-4-optional-patch-the-device-firmware).  
 -  ~TODO~
