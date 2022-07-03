@@ -11,7 +11,7 @@ No (official) documentation regarding (third-party) integration is available - t
 # How?
 Since reverse-engineering software may pose a infringement on copyrights, it is full responsibility of the user whether to reproduce the results or not.  
 
-In the following steps, the main unit will be referenced as `WMR500` or `device`.  
+In the following steps, the main unit will be referenced as `WMR500`, or just `device`.  
 
 ## 1. Define the cloud services replacements
 Since the integration relies on non-standard libraries, a [Home Assistant Docker installation](https://www.home-assistant.io/installation/linux#install-home-assistant-container) is assumed to be already working.  
@@ -276,14 +276,32 @@ Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the 
 - If all is well, after a HA restart the newly created sensors shall be available.
 
 ## 7. (OPTIONAL) Further firmware analysis
-All the previous steps were documented based on findings from decompiling/disassembly of both the Android app and the WMR500's firmware.  
-As to be expected, there are many unknown features and known issues still to be addressed.  
+All the previous steps were documented based on findings from decompiling/disassembly of both the Android app and the WMR500's firmware - as to be expected, there are many unknown features and also known issues still to be addressed.  
 One example is when the WMR500 randomly stops working correctly (no longer publishes on any MQTT topics), thus requiring a hardware reboot (power cycle).  
 
+Hardware-wise, the WMR500's main logic is controlled by a [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) microcontroller, complemented with a [MX25L1606E](https://datasheet.lcsc.com/lcsc/1912111437_MXIC-Macronix-MX25L1606EM2I-12G_C415878.pdf) SPI flash memory.  
+Based on memory content dumps, the external flash storage includes information such as user configuration (WiFi credentials, unit of measurements, etc.) and data statistics (min/max measurements, trends).  
+
 To further enhance the overall functionality by means of firmware analysis, one may setup a reverse-engineering environment, based on the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) software solution.  
-- Once [installed and run](https://github.com/NationalSecurityAgency/ghidra#install), create a new Non-shared Project via `File` -> `New project`.  
-- Via `File` -> `Import File`, select the binary file obtained from [previous chapter](#user-content-4-optional-patch-the-device-firmware).  
--  ~TODO~
+Note: the following steps are for Ghidra [version 10.1.4](https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_10.1.4_build).  
+- Once [installed and run](https://github.com/NationalSecurityAgency/ghidra#install), create a new non-shared Project via `File` -> `New project`.  
+- Using `File` -> `Import File`, select the binary file dumped in a [previous chapter](#user-content-4-optional-patch-the-device-firmware).  
+- Based on the targeted microcontroller, select `Language` as `ARM v7 32 little default`, then in the `Options` menu on the bottom-left set name to `ROM` and base address to `80000000`, after which close both windows via `Ok`.
+- Double-click the newly imported file to open the main development window - click `No` if asked to begin analyzing.  
+- Via the `Window` top menu, select `Memory map`, then uncheck the `W` checkbox for the `ROM` area.  
+- Click the green plus button to add a new memory space with the following settings: name `RAM`, start address `20000000`, length `0x20000`, flags `read`, `write`, and `volatile`.  
+<img src="docs/media/memory_map.png" width="600"/><br>
+- After closing the window, click `Analysis` -> `Auto Analyze`, leave all settings to default, then click `Analyze` to begin disassembly of the source file.  
+- Wait a few minutes until the process is completed - see the bottom-right progress bar.  
+- On the `Window` menu, one may browse through multiple views, including:
+  - `Symbol tree` for functions (subroutines),  
+  - `Defined data` for variables and constants,  
+  - `Defined strings` for constant strings (char arrays).  
+- Best starting point may be going through the in-code usage of various key strings, focusing on those that include keywords related to the target functionality (for eg. `TLS`, `socket`, `connected`, etc.).  
+One notable example is a hint given by string at address `0x80051ad8` - `Starting WICED v3.5.2`, which mentions the library used for network protocols - although deprecated around 2017, [backups](https://community.infineon.com/t5/Wi-Fi-Combo/WICED-Studio-5-2-0-has-been-released/td-p/74554s) could still be available.  
+- Using the library source files, one may cross-reference the function structures of known libraries to the disassembled code (which may not contain useful debug symbols such as function names).  
+- Another method of understanding the inner workings is through blind debugging of the firmware dump image - if a variable (or function) is found to be of interest, one may set a breakpoint on it to evaluate it's value (or call context).  
+- Finally, due to the design of the firmware, debugging printout is available via the hardware serial port (3.3V-only), accessible on-board the WMR500 through the `ML_TX`/`ML_RX` pins.  
 
 # Who/where/when?
-All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (June 2022), and licensed under the GNU General Public License v3.0.
+All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (July 2022), and licensed under the GNU General Public License v3.0.
