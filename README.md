@@ -213,7 +213,7 @@ For a WMR500 that reports the firmware version as `1490` (as value or the key `c
 	- Branch instruction (`BL`) at address `0x0801b628`, responsible for TLS enabling, to be replaced with `NOP`,  
 	- (OPTIONAL) Immediate value of Move Top instruction (`MOVW`) at address `0x0801b630`, responsible for loading the port number, to be replaced with the new value (for example `50007`).  
 - After modifying the firmware, flashing it back on the WMR500 will enable the changes.  
-A fully-patched firmware image is included [in this repo](firmware/wmr500_1490_patched.hex).
+A fully-patched firmware image (HTTP port 50007) is included [in this repo](firmware/wmr500_1490_patched.hex).
 
 ## 5. (OPTIONAL) Configure the time server
 The following steps are applicable only for a [patched WMR500](#user-content-4-optional-patch-the-device-firmware).  
