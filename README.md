@@ -194,12 +194,10 @@ As a rule, the values of interest have the keys with the naming format of `cXXX`
 
 ## 4. (OPTIONAL) Patch the device firmware
 To keep the WMR500 time and date synchronized, a HTTPS server is required to be deployed locally, so that a GET request to `https://app.idtlive.com/api/time/iso_8601` shall be responded with a payload of `{"time":"2022-01-01 00:00:00+0"}`.  
-
 In order to masquerade the original HTTPS server, the official [certificate private key](https://en.wikipedia.org/wiki/HTTPS#Server_setup) is mandatory to sign the local server's TLS connection - unfortunately this is not possible due to obvious security issues (and also lack of support from manufacturer).  
 The only solution is to modify the embedded software (firmware) on the WMR500 base station, so that it either:  
 - Uses a different public key (and/or certificate) to authenticate the local server - the key (certificate) will need to be update each time the server setup change, which may not be feasible, or  
 - Uses unsecured HTTP instead of HTTPS - no certification required, the local server can be (re)deployed without any further changes on the WMR500.  
-
 To perform the changes, the firmware onboard the WMR500's main microcontroller, an [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html), needs to be extracted, process which requires:  
 - Connection to the WMR500 board, by removing the front bezel, unscrewing 6 screws, and soldering five signals available on the middle of the board - pinout from top to bottom: `VCC`, `SWDIO`, `SWCLK`, `RESET`, and `GND`,  
 <br><img src="docs/media/case_bezel.png" width="400"/>
@@ -218,9 +216,8 @@ A fully-patched firmware image (HTTP port 50007) is included [in this repo](firm
 ## 5. (OPTIONAL) Configure the time server
 The following steps are applicable only for a [patched WMR500](#user-content-4-optional-patch-the-device-firmware).  
 - Install the required python libraries: `sudo pip install Flask gunicorn` ([why gunicorn?](https://flask.palletsprojects.com/en/2.0.x/deploying)).  
-- Edit the `http_wmr500.py` file by configuring the HTTP port (`HTTP_PORT`) patched on the WMR500 (default 50007).  
+- Optionally, edit the `http_wmr500.py` file by configuring the HTTP port (`HTTP_PORT`) patched on the WMR500 (default 50007).  
 - Run the Python script as root: `sudo gunicorn http_wmr500:app -b 0.0.0.0:xxxx`, where `xxxx` is the HTTP port.  
-- (Optional) Configure the script to run at startup, for example by adding it to `/etc/rc.local`.  
 
 ## 6. Configure the HomeAssistant instance
 - Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
