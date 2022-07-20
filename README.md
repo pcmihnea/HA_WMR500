@@ -257,12 +257,14 @@ sensor 1:
     unique_id: "wmr500_outdoor_wind"
     state_topic: "enno/in/json"
     value_template: "{{ ( value_json['data']['6']['outdoor']['channel1']['w2']['c21'] | float * 3.6 ) | round(2)}}"
+    icon: "mdi:wind-turbine"
     unit_of_measurement: "km/h"
   - platform: mqtt
     name: OUTDOOR_RAIN
     unique_id: "wmr500_outdoor_rain"
     state_topic: "enno/in/json"
     value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w4']['c41'] }}"
+    icon: "mdi:weather-pouring"
     unit_of_measurement: "mm"
   - platform: mqtt
     name: OUTDOOR_PRESS
