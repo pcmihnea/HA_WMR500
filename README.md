@@ -223,56 +223,56 @@ The following steps are applicable only for a [patched WMR500](#user-content-4-o
 - Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
 As the WMR500 reports a high number of measurements (over 55), user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
 ```
-sensor 1:
-  - platform: mqtt
-    name: INDOOR_TEMP
-    unique_id: "wmr500_indoor_temp"
-    state_topic: "enno/in/json"
-    value_template: "{{ value_json['data']['6']['indoor']['w9']['c91'] }}"
-    device_class: temperature
-    unit_of_measurement: "°F"
-  - platform: mqtt
-    name: INDOOR_HUMID
-    unique_id: "wmr500_indoor_humid"
-    state_topic: "enno/in/json"
-    value_template: "{{ value_json['data']['6']['indoor']['w9']['c96'] }}"
-    device_class: humidity
-    unit_of_measurement: "%"
-  - platform: mqtt
-    name: OUTDOOR_TEMP
-    unique_id: "wmr500_outdoor_temp"
-    state_topic: "enno/in/json"
-    value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c31'] }}"
-    device_class: temperature
-    unit_of_measurement: "°F"
-  - platform: mqtt
-    name: OUTDOOR_HUMID
-    unique_id: "wmr500_outdoor_humid"
-    state_topic: "enno/in/json"
-    value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c35'] }}"
-    device_class: humidity
-    unit_of_measurement: "%"
-  - platform: mqtt
-    name: OUTDOOR_WIND
-    unique_id: "wmr500_outdoor_wind"
-    state_topic: "enno/in/json"
-    value_template: "{{ ( value_json['data']['6']['outdoor']['channel1']['w2']['c21'] | float * 3.6 ) | round(2)}}"
-    icon: "mdi:wind-turbine"
-    unit_of_measurement: "km/h"
-  - platform: mqtt
-    name: OUTDOOR_RAIN
-    unique_id: "wmr500_outdoor_rain"
-    state_topic: "enno/in/json"
-    value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w4']['c41'] }}"
-    icon: "mdi:weather-pouring"
-    unit_of_measurement: "mm"
-  - platform: mqtt
-    name: OUTDOOR_PRESS
-    unique_id: "wmr500_outdoor_press"
-    state_topic: "enno/in/json"
-    value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w5']['c53'] }}"
-    device_class: pressure
-    unit_of_measurement: "hPa"
+mqtt:
+    sensor:
+        name: INDOOR_TEMP
+        unique_id: "wmr500_indoor_temp"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['indoor']['w9']['c91'] }}"
+        device_class: temperature
+        unit_of_measurement: "°F"
+    sensor:
+        name: INDOOR_HUMID
+        unique_id: "wmr500_indoor_humid"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['indoor']['w9']['c96'] }}"
+        device_class: humidity
+        unit_of_measurement: "%"
+    sensor:
+        name: OUTDOOR_TEMP
+        unique_id: "wmr500_outdoor_temp"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c31'] }}"
+        device_class: temperature
+        unit_of_measurement: "°F"
+    sensor:
+        name: OUTDOOR_HUMID
+        unique_id: "wmr500_outdoor_humid"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c35'] }}"
+        device_class: humidity
+        unit_of_measurement: "%"
+    sensor:
+        name: OUTDOOR_WIND
+        unique_id: "wmr500_outdoor_wind"
+        state_topic: "enno/in/json"
+        value_template: "{{ ( value_json['data']['6']['outdoor']['channel1']['w2']['c21'] | float * 3.6 ) | round(2)}}"
+        icon: "mdi:wind-turbine"
+        unit_of_measurement: "km/h"
+    sensor:
+        name: OUTDOOR_RAIN
+        unique_id: "wmr500_outdoor_rain"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w4']['c41'] }}"
+        icon: "mdi:weather-pouring"
+        unit_of_measurement: "mm"
+    sensor:
+        name: OUTDOOR_PRESS
+        unique_id: "wmr500_outdoor_press"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w5']['c53'] }}"
+        device_class: pressure
+        unit_of_measurement: "hPa"
 ```
 - Add the following lines in `automations.yaml` file (present in the same configuration folder).  
 Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the automation), `trigger` (`seconds: /30` means every 30 seconds, for 1 minute use `minutes: /1`), and `_GUUID_` (WMR500's GUUID).  
