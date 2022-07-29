@@ -198,20 +198,22 @@ In order to masquerade the original HTTPS server, the official [certificate priv
 The only solution is to modify the embedded software (firmware) on the WMR500 base station, so that it either:  
 - Uses a different public key (and/or certificate) to authenticate the local server - the key (certificate) will need to be update each time the server setup change, which may not be feasible, or  
 - Uses unsecured HTTP instead of HTTPS - no certification required, the local server can be (re)deployed without any further changes on the WMR500.  
-To perform the changes, the firmware onboard the WMR500's main microcontroller, an [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html), needs to be extracted, process which requires:  
-- Connection to the WMR500 board, by removing the front bezel, unscrewing 6 screws, and soldering five signals available on the middle of the board - pinout from top to bottom: `VCC`, `SWDIO`, `SWCLK`, `RESET`, and `GND`,  
+
+To perform the changes, the firmware onboard the WMR500's main microcontroller ([STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html)), needs to be patched, process which requires:  
+- Opening the case, by removing the two grey bezels on the front of the device, then unscrewing 6 screws under the outer bezel and one screw under the inner one,  
+- Soldering five wires to the testpoints available on the middle of the board - pinout from top to bottom: `VCC` (3.3V), `SWDIO`, `SWCLK`, `RESET` (active-low), and `GND`,  
 <br><img src="docs/media/case_bezel.png" width="400"/>
 <img src="docs/media/pcb_topside.png" width="400"/><br>
-- A SWD-compatible flasher, such as [J-Link](https://www.segger.com/products/debug-probes/j-link/) or other [OpenOCD-compatible](https://openocd.org/pages/documentation.html) tool.   
-If using a J-Link, one may dump the complete firmware as a binary file by means of the included [command-line utility](https://wiki.segger.com/J-Link_Commander) via command `SaveBin C:\wmr500_firmware.bin 0x00 0x80000`.  
+- Reading the firmware using a SWD-compatible flasher, such as [J-Link](https://www.segger.com/products/debug-probes/j-link/) or other [OpenOCD-compatible](https://openocd.org/pages/documentation.html) tools.   
+If using a J-Link, one may dump the full flash contents as a binary file by means of the included [command-line utility](https://wiki.segger.com/J-Link_Commander) via command `SaveBin C:\wmr500_firmware.bin 0x00 0x80000`.  
 - Once the firmware is obtained, using the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) tool for disassembly and analysis, the function calls used for enabling TLS are identified and patched - additionally, the HTTP port can be changed from the default `443`.  
 To reproduce the complete workspace setup, see [following chapter](#user-content-7-optional-further-firmware-analysis).  
-For a WMR500 that reports the firmware version as `1490` (as value or the key `c82` in the response obtained when [requesting the measurement values](#user-content-3-request-the-measurement-values)), the following binary changes are to be made:  
+For a WMR500 that reports the firmware version as `1490` (value of key `c82` in the response obtained when [requesting the measurement values](#user-content-3-request-the-measurement-values)), the following binary changes are to be made:  
 	- Branch instruction (`BL`) at address `0x0801b614`, responsible for TLS context initialization, to be replaced with `NOP`,  
 	- Branch instruction (`BL`) at address `0x0801b628`, responsible for TLS enabling, to be replaced with `NOP`,  
-	- (OPTIONAL) Immediate value of Move Top instruction (`MOVW`) at address `0x0801b630`, responsible for loading the port number, to be replaced with the new value (for example `50007`).  
+	- (OPTIONAL) Immediate value of Move Top instruction (`MOVW`) at address `0x0801b630`, responsible for loading the port number, to be replaced with the desired value (`1` to `65535` decimal).  
 - After modifying the firmware, flashing it back on the WMR500 will enable the changes.  
-A fully-patched firmware image (HTTP port 50007) is included [in this repo](firmware/wmr500_1490_patched.hex).
+A fully-patched firmware image, with a new HTTP port of 50007, is included [in this repo](firmware/wmr500_1490_patched.hex).
 
 ## 5. (OPTIONAL) Configure the time server
 The following steps are applicable only for a [patched WMR500](#user-content-4-optional-patch-the-device-firmware).  
