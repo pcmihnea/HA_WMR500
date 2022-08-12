@@ -242,7 +242,7 @@ Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the 
 
 - Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
 As the WMR500 reports a high number of measurements (over 55), user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
-Note: `expire_after` value should be set at minimum double the sample period (as defined by the automation trigger period), for eg. 60.  
+Note: `expire_after` value should be set at least five times the sample period (as defined by the automation trigger period), for eg. 300.  
 ```
 mqtt:
     sensor:
@@ -252,49 +252,49 @@ mqtt:
         value_template: "{{ value_json['data']['6']['indoor']['w9']['c91'] }}"
         device_class: temperature
         unit_of_measurement: "°F"
-        expire_after: 60
+        expire_after: 300
       - name: INDOOR_HUMID
         unique_id: "wmr500_indoor_humid"
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['indoor']['w9']['c96'] }}"
         device_class: humidity
         unit_of_measurement: "%"
-        expire_after: 60
+        expire_after: 300
       - name: OUTDOOR_TEMP
         unique_id: "wmr500_outdoor_temp"
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c31'] }}"
         device_class: temperature
         unit_of_measurement: "°F"
-        expire_after: 60
+        expire_after: 300
       - name: OUTDOOR_HUMID
         unique_id: "wmr500_outdoor_humid"
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c35'] }}"
         device_class: humidity
         unit_of_measurement: "%"
-        expire_after: 60
+        expire_after: 300
       - name: OUTDOOR_WIND
         unique_id: "wmr500_outdoor_wind"
         state_topic: "enno/in/json"
         value_template: "{{ ( value_json['data']['6']['outdoor']['channel1']['w2']['c21'] | float * 3.6 ) | round(2)}}"
         icon: "mdi:wind-turbine"
         unit_of_measurement: "km/h"
-        expire_after: 60
+        expire_after: 300
       - name: OUTDOOR_RAIN
         unique_id: "wmr500_outdoor_rain"
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w4']['c41'] }}"
         icon: "mdi:weather-pouring"
         unit_of_measurement: "mm"
-        expire_after: 60
+        expire_after: 300
       - name: OUTDOOR_PRESS
         unique_id: "wmr500_outdoor_press"
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w5']['c53'] }}"
         device_class: pressure
         unit_of_measurement: "hPa"
-        expire_after: 60
+        expire_after: 300
 ```
 
 - If all is well, after a HA restart the newly created sensors shall be available.
