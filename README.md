@@ -222,61 +222,6 @@ The following steps are applicable only for a [patched WMR500](#user-content-4-o
 - Run the Python script as root: `sudo gunicorn http_wmr500:app -b 0.0.0.0:xxxx`, where `xxxx` is the HTTP port.  
 
 ## 6. Configure the HomeAssistant instance
-- Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
-As the WMR500 reports a high number of measurements (over 55), user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
-```
-mqtt:
-    sensor:
-      - name: INDOOR_TEMP
-        unique_id: "wmr500_indoor_temp"
-        state_topic: "enno/in/json"
-        value_template: "{{ value_json['data']['6']['indoor']['w9']['c91'] }}"
-        device_class: temperature
-        unit_of_measurement: "°F"
-        expire_after: 600
-      - name: INDOOR_HUMID
-        unique_id: "wmr500_indoor_humid"
-        state_topic: "enno/in/json"
-        value_template: "{{ value_json['data']['6']['indoor']['w9']['c96'] }}"
-        device_class: humidity
-        unit_of_measurement: "%"
-        expire_after: 600
-      - name: OUTDOOR_TEMP
-        unique_id: "wmr500_outdoor_temp"
-        state_topic: "enno/in/json"
-        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c31'] }}"
-        device_class: temperature
-        unit_of_measurement: "°F"
-        expire_after: 600
-      - name: OUTDOOR_HUMID
-        unique_id: "wmr500_outdoor_humid"
-        state_topic: "enno/in/json"
-        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c35'] }}"
-        device_class: humidity
-        unit_of_measurement: "%"
-        expire_after: 600
-      - name: OUTDOOR_WIND
-        unique_id: "wmr500_outdoor_wind"
-        state_topic: "enno/in/json"
-        value_template: "{{ ( value_json['data']['6']['outdoor']['channel1']['w2']['c21'] | float * 3.6 ) | round(2)}}"
-        icon: "mdi:wind-turbine"
-        unit_of_measurement: "km/h"
-        expire_after: 600
-      - name: OUTDOOR_RAIN
-        unique_id: "wmr500_outdoor_rain"
-        state_topic: "enno/in/json"
-        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w4']['c41'] }}"
-        icon: "mdi:weather-pouring"
-        unit_of_measurement: "mm"
-        expire_after: 600
-      - name: OUTDOOR_PRESS
-        unique_id: "wmr500_outdoor_press"
-        state_topic: "enno/in/json"
-        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w5']['c53'] }}"
-        device_class: pressure
-        unit_of_measurement: "hPa"
-        expire_after: 600
-```
 - Add the following lines in `automations.yaml` file (present in the same configuration folder).  
 Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the automation), `trigger` (`seconds: /30` means every 30 seconds, for 1 minute use `minutes: /1`), and `_GUUID_` (WMR500's GUUID).  
 ```
@@ -294,6 +239,64 @@ Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the 
       payload: '{"command": "getChannel1Status", "id": "_GUUID_"}'
   mode: single
   ```
+
+- Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
+As the WMR500 reports a high number of measurements (over 55), user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
+Note: `expire_after` value should be set at minimum double the sample period (as defined by the automation trigger period), for eg. 60.  
+```
+mqtt:
+    sensor:
+      - name: INDOOR_TEMP
+        unique_id: "wmr500_indoor_temp"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['indoor']['w9']['c91'] }}"
+        device_class: temperature
+        unit_of_measurement: "°F"
+        expire_after: 60
+      - name: INDOOR_HUMID
+        unique_id: "wmr500_indoor_humid"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['indoor']['w9']['c96'] }}"
+        device_class: humidity
+        unit_of_measurement: "%"
+        expire_after: 60
+      - name: OUTDOOR_TEMP
+        unique_id: "wmr500_outdoor_temp"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c31'] }}"
+        device_class: temperature
+        unit_of_measurement: "°F"
+        expire_after: 60
+      - name: OUTDOOR_HUMID
+        unique_id: "wmr500_outdoor_humid"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c35'] }}"
+        device_class: humidity
+        unit_of_measurement: "%"
+        expire_after: 60
+      - name: OUTDOOR_WIND
+        unique_id: "wmr500_outdoor_wind"
+        state_topic: "enno/in/json"
+        value_template: "{{ ( value_json['data']['6']['outdoor']['channel1']['w2']['c21'] | float * 3.6 ) | round(2)}}"
+        icon: "mdi:wind-turbine"
+        unit_of_measurement: "km/h"
+        expire_after: 60
+      - name: OUTDOOR_RAIN
+        unique_id: "wmr500_outdoor_rain"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w4']['c41'] }}"
+        icon: "mdi:weather-pouring"
+        unit_of_measurement: "mm"
+        expire_after: 60
+      - name: OUTDOOR_PRESS
+        unique_id: "wmr500_outdoor_press"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w5']['c53'] }}"
+        device_class: pressure
+        unit_of_measurement: "hPa"
+        expire_after: 60
+```
+
 - If all is well, after a HA restart the newly created sensors shall be available.
 
 ## 7. (OPTIONAL) Further firmware analysis
@@ -325,4 +328,4 @@ One notable example is a hint given by string at address `0x80051ad8` - `Startin
 - Finally, due to the design of the firmware, debugging printout is available via the hardware serial port (3.3V-only), accessible on-board the WMR500 through the `ML_TX`/`ML_RX` pins.  
 
 # Who/where/when?
-All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (July 2022), and licensed under the GNU General Public License v3.0.
+All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (August 2022), and licensed under the GNU General Public License v3.0.
