@@ -12,10 +12,10 @@ def wmr500_1():
     return {"time": datetime.now().isoformat(sep=' ', timespec='seconds') + '+0'}, 200
 
 
-if __name__ == '__main__':
-    try:
-        logging.info('INIT')
-        logging.info('LOOP')
+try:
+    logging.info('INIT')
+    logging.info('LOOP')
+    if __name__ == '__main__':
         app.run(host='0.0.0.0', port=HTTP_PORT)
-    except Exception:
-        logging.exception('EXCEPTION')
+except Exception:
+    logging.exception('EXCEPTION')
