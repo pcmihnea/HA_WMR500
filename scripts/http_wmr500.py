@@ -13,9 +13,7 @@ def wmr500_1():
 
 
 try:
-    logging.info('INIT')
-    logging.info('LOOP')
     if __name__ == '__main__':
         app.run(host='0.0.0.0', port=HTTP_PORT)
 except Exception:
-    logging.exception('EXCEPTION')
+    pass
