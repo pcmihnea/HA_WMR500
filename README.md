@@ -208,12 +208,15 @@ To perform the changes, the firmware onboard the WMR500's main microcontroller (
 If using a J-Link, one may dump the full flash contents as a binary file by means of the included [command-line utility](https://wiki.segger.com/J-Link_Commander) via command `SaveBin C:\wmr500_firmware.bin 0x00 0x80000`.  
 - Once the firmware is obtained, using the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) tool for disassembly and analysis, the function calls used for enabling TLS are identified and patched - additionally, the HTTP port can be changed from the default `443`.  
 To reproduce the complete workspace setup, see [following chapter](#user-content-7-optional-further-firmware-analysis).  
-For a WMR500 that reports the firmware version as `1490` (value of key `c82` in the response obtained when [requesting the measurement values](#user-content-3-request-the-measurement-values)), the following binary changes are to be made:  
+For a WMR500 that reports the firmware version as `1490`, the following binary changes are to be made:  
 	- Branch instruction (`BL`) at address `0x0801b614`, responsible for TLS context initialization, to be replaced with `NOP`,  
 	- Branch instruction (`BL`) at address `0x0801b628`, responsible for TLS enabling, to be replaced with `NOP`,  
 	- (OPTIONAL) Immediate value of Move Top instruction (`MOVW`) at address `0x0801b630`, responsible for loading the port number, to be replaced with the desired value (`1` to `65535` decimal).  
 - After modifying the firmware, flashing it back on the WMR500 will enable the changes.  
-A fully-patched firmware image, with a new HTTP port of 50007, is included [in this repo](firmware/wmr500_1490_patched.hex).
+Note: To obtain firmware version number, either:
+	- check value of key `c82` in the response obtained when [requesting the measurement values](#user-content-3-request-the-measurement-values)),  
+	- hold `select` and `up` buttons on the WMR500 for two seconds.  
+A fully-patched firmware image, with a new HTTP port of 50007, is present [in this repo](firmware/wmr500_1490_patched.hex). A non-modified firmware dump is also [included](firmware/wmr500_1490_original.bin).  
 
 ## 5. (OPTIONAL) Configure the time server
 The following steps are applicable only for a [patched WMR500](#user-content-4-optional-patch-the-device-firmware).  
@@ -328,4 +331,4 @@ One notable example is a hint given by string at address `0x80051ad8` - `Startin
 - Finally, due to the design of the firmware, debugging printout is available via the hardware serial port (3.3V-only), accessible on-board the WMR500 through the `ML_TX`/`ML_RX` pins.  
 
 # Who/where/when?
-All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (August 2022), and licensed under the GNU General Public License v3.0.
+All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (September 2022), and licensed under the GNU General Public License v3.0.
