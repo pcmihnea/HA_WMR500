@@ -216,7 +216,11 @@ For a WMR500 that reports the firmware version as `1490`, the following binary c
 Note: To obtain firmware version number, either:
 	- check value of key `c82` in the response obtained when [requesting the measurement values](#user-content-3-request-the-measurement-values)),  
 	- hold `select` and `up` buttons on the WMR500 for two seconds.  
-A fully-patched firmware image, with a new HTTP port of 50007, is present [in this repo](firmware/wmr500_1490_patched.hex). A non-modified firmware dump is also [included](firmware/wmr500_1490_original.bin).  
+
+A fully-patched firmware image, with a new HTTP port of 50007, is present [in this repo](firmware/wmr500_1490_patched.hex). 
+A non-modified firmware 1490 dump is also [included](firmware/wmr500_1490_original.bin).
+A lower firmware 1476 has also  been shared and [included](firmware/wmr500_1476_original.bin).   
+
 
 ## 5. (OPTIONAL) Configure the time server
 The following steps are applicable only for a [patched WMR500](#user-content-4-optional-patch-the-device-firmware).  
