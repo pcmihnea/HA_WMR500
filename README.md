@@ -335,4 +335,4 @@ One notable example is a hint given by string at address `0x80051ad8` - `Startin
 - Finally, due to the design of the firmware, debugging printout is available via the hardware serial port (3.3V-only), accessible on-board the WMR500 through the `ML_TX`/`ML_RX` pins.  
 
 # Who/where/when?
-All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (September 2022), and licensed under the GNU General Public License v3.0.
+All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (October 2022), and licensed under the GNU General Public License v3.0.
