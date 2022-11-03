@@ -249,7 +249,7 @@ Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the 
 
 - Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
 As the WMR500 reports a high number of measurements (over 55), user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
-Note: `expire_after` value should be set at least four times the sample period (as defined by the automation trigger period), for eg. 120.  
+Note: `expire_after` value should be set at least four times the sample period (as defined by the automation trigger period), for eg. 4*30=120.  
 ```
 mqtt:
     sensor:
@@ -258,6 +258,7 @@ mqtt:
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['indoor']['w9']['c91'] }}"
         device_class: temperature
+        state_class: measurement
         unit_of_measurement: "°F"
         expire_after: 120
       - name: INDOOR_HUMID
@@ -265,6 +266,7 @@ mqtt:
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['indoor']['w9']['c96'] }}"
         device_class: humidity
+        state_class: measurement
         unit_of_measurement: "%"
         expire_after: 120
       - name: OUTDOOR_TEMP
@@ -272,6 +274,7 @@ mqtt:
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c31'] }}"
         device_class: temperature
+        state_class: measurement
         unit_of_measurement: "°F"
         expire_after: 120
       - name: OUTDOOR_HUMID
@@ -279,6 +282,7 @@ mqtt:
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c35'] }}"
         device_class: humidity
+        state_class: measurement
         unit_of_measurement: "%"
         expire_after: 120
       - name: OUTDOOR_WIND
@@ -286,6 +290,7 @@ mqtt:
         state_topic: "enno/in/json"
         value_template: "{{ ( value_json['data']['6']['outdoor']['channel1']['w2']['c21'] | float * 3.6 ) | round(2)}}"
         device_class: wind_speed
+        state_class: measurement
         unit_of_measurement: "km/h"
         expire_after: 120
       - name: OUTDOOR_RAIN
@@ -293,6 +298,7 @@ mqtt:
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w4']['c41'] }}"
         device_class: distance
+        state_class: measurement
         unit_of_measurement: "mm"
         expire_after: 120
       - name: OUTDOOR_PRESS
@@ -300,6 +306,7 @@ mqtt:
         state_topic: "enno/in/json"
         value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w5']['c53'] }}"
         device_class: pressure
+        state_class: measurement
         unit_of_measurement: "hPa"
         expire_after: 120
 ```
