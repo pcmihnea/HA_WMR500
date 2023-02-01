@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask import Flask
 
-HTTP_PORT = 50007
+HTTP_PORT = 443
 
 app = Flask(__name__)
 
