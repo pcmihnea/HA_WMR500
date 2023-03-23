@@ -251,14 +251,14 @@ http_wmr500:
 
 ## 6. Configure the HomeAssistant instance
 - Add the following lines in `automations.yaml` file (present in the same configuration folder).  
-Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the automation), `trigger` (`seconds: /30` means every 30 seconds, for 1 minute use `minutes: /1`), and `_GUUID_` (WMR500's GUUID).  
+Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the automation), `trigger` (`minutes: /1` means every 60 seconds), and `_GUUID_` (WMR500's GUUID).  
 ```
 - id: '_AUTOMATION_ID_'
   alias: WMR500_Update_Trigger
   description: ''
   trigger:
   - platform: time_pattern
-    seconds: /30
+    minutes: /1
   condition: []
   action:
   - service: mqtt.publish
@@ -270,7 +270,7 @@ Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the 
 
 - Add the following lines in `configuration.yaml` file (present inside the user-defined `homeassistant` configuration folder).  
 As the WMR500 reports a high number of measurements (over 55), user discretion is advised in selecting which measurement to be integrated in the HomeAssistant instance.  
-Note: `expire_after` value should be set at least four times the sample period (as defined by the automation trigger period), for eg. 4*30=120.  
+Note: `expire_after` value should be set at least three times the sample period (as defined by the automation trigger period), for eg. 3*60=180.  
 ```
 mqtt:
     sensor:
@@ -281,7 +281,7 @@ mqtt:
         device_class: temperature
         state_class: measurement
         unit_of_measurement: "°F"
-        expire_after: 120
+        expire_after: 180
       - name: INDOOR_HUMID
         unique_id: "wmr500_indoor_humid"
         state_topic: "enno/in/json"
@@ -289,7 +289,7 @@ mqtt:
         device_class: humidity
         state_class: measurement
         unit_of_measurement: "%"
-        expire_after: 120
+        expire_after: 180
       - name: OUTDOOR_TEMP
         unique_id: "wmr500_outdoor_temp"
         state_topic: "enno/in/json"
@@ -297,7 +297,7 @@ mqtt:
         device_class: temperature
         state_class: measurement
         unit_of_measurement: "°F"
-        expire_after: 120
+        expire_after: 180
       - name: OUTDOOR_HUMID
         unique_id: "wmr500_outdoor_humid"
         state_topic: "enno/in/json"
@@ -305,7 +305,7 @@ mqtt:
         device_class: humidity
         state_class: measurement
         unit_of_measurement: "%"
-        expire_after: 120
+        expire_after: 180
       - name: OUTDOOR_WIND
         unique_id: "wmr500_outdoor_wind"
         state_topic: "enno/in/json"
@@ -313,7 +313,7 @@ mqtt:
         device_class: wind_speed
         state_class: measurement
         unit_of_measurement: "km/h"
-        expire_after: 120
+        expire_after: 180
       - name: OUTDOOR_RAIN
         unique_id: "wmr500_outdoor_rain"
         state_topic: "enno/in/json"
@@ -321,7 +321,7 @@ mqtt:
         device_class: distance
         state_class: measurement
         unit_of_measurement: "mm"
-        expire_after: 120
+        expire_after: 180
       - name: OUTDOOR_PRESS
         unique_id: "wmr500_outdoor_press"
         state_topic: "enno/in/json"
@@ -329,7 +329,7 @@ mqtt:
         device_class: pressure
         state_class: measurement
         unit_of_measurement: "hPa"
-        expire_after: 120
+        expire_after: 180
 ```
 
 - If all is well, after a HA restart the newly created sensors shall be available.
@@ -363,4 +363,4 @@ One notable example is a hint given by string at address `0x80051ad8` - `Startin
 - Finally, due to the design of the firmware, debugging printout is available via the hardware serial port (3.3V-only), accessible on-board the WMR500 through the `ML_TX`/`ML_RX` pins.  
 
 # Who/where/when?
-All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (February 2023), and licensed under the GNU General Public License v3.0.
+All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (March 2023), and licensed under the GNU General Public License v3.0.
