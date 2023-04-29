@@ -223,8 +223,8 @@ Both approaches require at minimum the following binary firmware patches:
 - Branch instruction (`BL`) at address `0x0801b628` (responsible for TLS enabling) to be replaced with `NOP`.  
 
 If using second approach, additional changes are necessary:  
-- Raw data bytes at address `0x080491a4` (used for issuing the HTTP request) to be replaced from `47 45 54 20 2f 61 70 69 2f 74 69 6d 65 2f 69 73 6f 5f 38 36 30 31` to `50 4f 53 54 20 2f 61 70 69 2f 61 70 70 64 61 65 6d 6f 6e 2f 77 6d`.  
-As the Appdaemon REST API is [extremely limited](https://appdaemon.readthedocs.io/en/latest/APPGUIDE.html#restful-api-support), this patch replaces the default HTTP request type and URI from `GET /api/time/iso_8601` to a supported one `POST /api/appdaemon/wm` (note ).  
+- Raw data bytes at address `0x080491a4` (used for issuing the HTTP request) to be replaced from `47 45 54 20 2f 61 70 69 2f 74 69 6d 65 2f 69 73 6f 5f 38 36 30 31` to `47 45 54 20 2F 61 70 69 2F 61 70 70 64 61 65 6D 6F 6E 2F 77 6D 72`.  
+As the Appdaemon REST API is [limited](https://appdaemon.readthedocs.io/en/latest/APPGUIDE.html#restful-api-support), this patch replaces the default HTTP request URI from `/api/time/iso_8601` to a supported one `/api/appdaemon/wmr`.  
 - Immediate value of Add (`ADDS`), at address `0x0801b630`, to be replaced with `2`.  
 The current Appdaemon implementation returns a JSON string with two whitespaces after the keys and values delimiter (`"time":__"value"`) instead of one (`"time":_"value"`), thus preventing the WMR500 in correctly parsing the values. Changing from `1` to `2` allows jumping to the correct start position of the JSON value.  
 
@@ -237,7 +237,7 @@ The following steps are applicable only for a WMR500 with a patched firmware, as
 If using the first approach (generic server):  
 - Install the required python libraries: `sudo pip install flask gunicorn` ([why gunicorn?](https://flask.palletsprojects.com/en/2.2.x/deploying)).  
 - Optionally, edit the `http_wmr500_generic.py` file by configuring the HTTP port (`HTTP_PORT`) as to the one patched on the WMR500 (default `443`).  
-- Run the Python script as root: `sudo gunicorn http_wmr500_generic:app -b 0.0.0.0:xxxx`, where `xxxx` is the HTTP port.  
+- Run the Python script as root: `sudo gunicorn http_wmr500_generic:app -b 0.0.0.0:xxxx`, where `xxxx` is the chosen HTTP port.  
 
 If using the second approach (Appdaemon):  
 - Copy the `http_wmr500_appdaemon.py` file to the Appdaemon [app folder](https://github.com/hassio-addons/addon-appdaemon/blob/main/appdaemon/DOCS.md) (for eg. `/config/appdaemon/apps` in a Home Assistant OS installation).  
@@ -338,11 +338,11 @@ mqtt:
 All the previous steps were documented based on findings from decompiling/disassembly of both the Android app and the WMR500's firmware - as to be expected, there are many unknown features and also known issues still to be addressed.  
 One example is when the WMR500 randomly stops working correctly (no longer publishes on any MQTT topics), thus requiring a hardware reboot (power cycle).  
 
-Hardware-wise, the WMR500's main logic is controlled by a [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) microcontroller, complemented with a [MX25L1606E](https://datasheet.lcsc.com/lcsc/1912111437_MXIC-Macronix-MX25L1606EM2I-12G_C415878.pdf) SPI flash memory.  
+Hardware-wise, the WMR500's main logic is controlled by a [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) microcontroller, complemented by a [MX25L1606E](https://datasheet.lcsc.com/lcsc/1912111437_MXIC-Macronix-MX25L1606EM2I-12G_C415878.pdf) SPI flash memory.  
 Based on memory content dumps, the external flash storage includes information such as user configuration (WiFi credentials, unit of measurements, etc.) and data statistics (min/max measurements, trends).  
 
 To further enhance the overall functionality by means of firmware analysis, one may setup a reverse-engineering environment, based on the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) software solution.  
-Note: the following steps are for Ghidra [version 10.1.4](https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_10.1.4_build).  
+Note: the following steps are for Ghidra [version 10.2.3](https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_10.2.3_build).  
 - Once [installed and run](https://github.com/NationalSecurityAgency/ghidra#install), create a new non-shared Project via `File` -> `New project`.  
 - Using `File` -> `Import File`, select the binary file dumped in a [previous chapter](#user-content-4-optional-patch-the-device-firmware).  
 - Based on the targeted microcontroller, select `Language` as `ARM v7 32 little default`, then in the `Options` menu on the bottom-left set name to `ROM` and base address to `80000000`, after which close both windows via `Ok`.
@@ -360,7 +360,7 @@ Note: the following steps are for Ghidra [version 10.1.4](https://github.com/Nat
 One notable example is a hint given by string at address `0x80051ad8` - `Starting WICED v3.5.2`, which mentions the library used for network protocols - although deprecated around 2017, [backups](https://community.infineon.com/t5/Wi-Fi-Combo/WICED-Studio-5-2-0-has-been-released/td-p/74554s) could still be available.  
 - Using the library source files, one may cross-reference the function structures of known libraries to the disassembled code (which may not contain useful debug symbols such as function names).  
 - Another method of understanding the inner workings is through blind debugging of the firmware dump image - if a variable (or function) is found to be of interest, one may set a breakpoint on it to evaluate it's value (or call context).  
-- Finally, due to the design of the firmware, debugging printout is available via the hardware serial port (3.3V-only), accessible on-board the WMR500 through the `ML_TX`/`ML_RX` pins.  
+- Finally, due to the design of the firmware, debugging printout is available via the hardware serial port (3.3V-only), accessible on-board the WMR500 through the `ML_TX` pin.  
 
 # Who/where/when?
-All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (March 2023), and licensed under the GNU General Public License v3.0.
+All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (May 2023), and licensed under the GNU General Public License v3.0.
