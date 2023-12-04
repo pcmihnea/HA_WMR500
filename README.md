@@ -21,7 +21,7 @@ For traffic routing, a local static DNS entry is required - one method that does
 - Install a DNS server on a user server, configuring it to assign DNS translation to local IP addresses,  
 - Configure the network router's DHCP server's advertised secondary DNS server to the user server IP address.  
 
-As a example, for a RaspberryPi4B+ assigned a IP address of 192.168.0.2, connected to a router with LAN address 192.168.0.1:  
+As a example, for a RaspberryPi4B+ assigned a IP address of `192.168.0.2`, connected to a router with LAN address `192.168.0.1`:  
 - Install a DNS server using: `sudo apt install dnsmasq`.  
 - Configure the DNS server by adding the following lines to `/etc/dnsmasq.conf`:
 		```
@@ -37,8 +37,8 @@ As a example, for a RaspberryPi4B+ assigned a IP address of 192.168.0.2, connect
 		no-dhcp-interface=eth0
 		```
 - Reboot the RaspberryPi.  
-- On the main router set the secondary DNS server address to 192.168.0.2 - if necessary set the primary DNS server entry to the router's LAN IP address (for eg. 192.168.0.1).  
-- All local devices that rely on DHCP IP address assignments will now have the two DNS server addresses advertised to, 192.168.0.2 (which will resolve only `app.idtlive.com` and `mqtt.idtlive.com`) and 192.168.0.1 (which will resolve all other DNS queries).  
+- On the main router set the secondary DNS server address to `192.168.0.2` - if necessary set the primary DNS server entry to the router's LAN IP address (for eg. `192.168.0.1`).  
+- All local devices that rely on DHCP IP address assignments will now have the two DNS server addresses advertised to, `192.168.0.2 `(which will resolve only `app.idtlive.com` and `mqtt.idtlive.com`) and `192.168.0.1` (which will resolve all other DNS queries).  
 
 ## 2. Configure the device
 - (Optional) Reset the WMR500 to factory settings by holding both the `up` and `down` buttons on the unit for 6 seconds.  
@@ -61,7 +61,8 @@ If no MQTT connect packets are received, check that the local MQTT broker is run
 - The WMR500 reacts to commands by publishing its responses on the `enno/in/json` topic.  
 
 A number of non-volatile parameters can be set on the main unit, using the payload `{"command": "setSettings", "XX": "YY", "id": "DEBUG"}`, where `XX` is the parameter name, and `YY` the new value. Known parameters are:  
-	- `ca1`= temperature unit (integer): 0=°F, 1=°C.  
+
+	- `ca1`= temperature unit (integer): 0=dgrF, 1=dgrC.  
 	- `ca2`= wind speed unit (integer): 0=m/s, 1=Knoten, 2=km/h, 3=mph.  
 	- `ca3`= rainfall unit (integer): 0=mm, 1=inch.  
 	- `ca4`= pressure unit (integer): 0=mbar, 1=hPa, 2=mmHg, 3=inHg.  
@@ -73,13 +74,13 @@ A number of non-volatile parameters can be set on the main unit, using the paylo
 	- `cb4`= hemisphere (integer): 0=north, 1=south.  
 	- `cb6`= latitude (double): degrees.  
 	- `cb7`= longitude (double): degrees.  
-For example, to set the temperature unit to °C, publish to `enno/out/json/_GUUID_` with payload `{"command": "setSettings", "ca1": "1", "id": "DEBUG"}`.  
+
+For example, to set the temperature unit to dgrC, publish to `enno/out/json/_GUUID_` with payload `{"command": "setSettings", "ca1": "1", "id": "DEBUG"}`.  
 
 ## 3. Request the measurement values
-- To obtain the latest measurement values from the WMR500, publish to `enno/out/json/_GUUID_` the payload `{"command": "getChannel1Status", "id": "_GUUID_"}` (replace `_GUUID_` with the 36-chars GUUID).  
-- The WMR500 will publish the response to `enno/in/json/`, with a JSON payload of a fixed structure, containing a number of keys, as shown below.  
-
-To ease in documenting the JSON contents, the numeric values have been replaced with a dictionary containing the label, data type, and unit for each known parameter - a number of `_COMMENT_` key/value pairs were added in this document in order to improve clarity.  
+To obtain the latest measurement values from the WMR500, publish to `enno/out/json/_GUUID_` the payload `{"command": "getChannel1Status", "id": "_GUUID_"}` (replace `_GUUID_` with the 36-chars GUUID).  
+The WMR500 will publish the response to `enno/in/json/`, with a JSON payload of a fixed structure, containing a number of keys, as shown below.  
+To ease in documenting the JSON contents, the numeric values have been replaced with a dictionary containing the label, data type, and unit (`"_Label_", "_Type_", "_Unit_"`) for each known parameter - a number of `_Comment_` key/value pairs were also added for clarity.  
 As a rule, the values of interest have the keys with the naming format of `cXXX`, where `XXX` is a 2-3 digit number.  
 ```json
 {
@@ -92,93 +93,93 @@ As a rule, the values of interest have the keys with the naming format of `cXXX`
       "result": true,
       "desc": "if false,return desc",
       "indoor": {
-        "w8": { "_COMMENT_":  "general",
-          "c81": {"label" : "mac", "type" : "String", "unit": "no delimiters"},
-          "c82": {"label" : "firmware_version", "type" : "int", "unit": "1490=default"},
-          "c83": {"label" : "hardwareversion", "type" : "int", "unit": "1=default"},
-          "c84": {"label" : "batteryIsLow", "type" : "int", "unit": "0=NO, 1=YES"},
-          "c85": {"label" : "pairingMode", "type" : "int", "unit": "0=NO, 1=YES"},
-          "c86": {"label" : "powerAdaptor", "type" : "int", "unit": "0=NO, 1=YES"},
-          "c87": {"label" : "channel1status", "type" : "int", "unit": "0=NOK, 1=OK"},
-          "c88": {"label" : "channel2status", "type" : "int", "unit": "0=NOK, 1=OK"},
-          "c89": {"label" : "channel3status", "type" : "int", "unit": "0=NOK, 1=OK"},
-          "c811": {"label" : "location", "type" : "String", "unit": "{latitute}, {longitude}"}
+        "w8": { "_Comment_":  "general",
+          "c81": {"_Label_" : "mac", "_Type_" : "String", "_Unit_": "no delimiters"},
+          "c82": {"_Label_" : "firmware_version", "_Type_" : "int", "_Unit_": "1490=default"},
+          "c83": {"_Label_" : "hardwareversion", "_Type_" : "int", "_Unit_": "1=default"},
+          "c84": {"_Label_" : "batteryIsLow", "_Type_" : "int", "_Unit_": "0=NO, 1=YES"},
+          "c85": {"_Label_" : "pairingMode", "_Type_" : "int", "_Unit_": "0=NO, 1=YES"},
+          "c86": {"_Label_" : "powerAdaptor", "_Type_" : "int", "_Unit_": "0=NO, 1=YES"},
+          "c87": {"_Label_" : "channel1status", "_Type_" : "int", "_Unit_": "0=NOK, 1=OK"},
+          "c88": {"_Label_" : "channel2status", "_Type_" : "int", "_Unit_": "0=NOK, 1=OK"},
+          "c89": {"_Label_" : "channel3status", "_Type_" : "int", "_Unit_": "0=NOK, 1=OK"},
+          "c811": {"_Label_" : "location", "_Type_" : "String", "_Unit_": "{latitute}, {longitude}"}
         },
-        "w9": { "_COMMENT_":  "indoor",
-          "c91": {"label" : "temperature", "type" : "float", "unit": "°F, 210=NaN"},
-          "c92": {"label" : "temperatureTrend", "type" : "int", "unit": "0=steady, 1=rise, 2=fall"},
-          "c93": {"label" : "maxTemperatureToday", "type" : "float", "unit": "°F, 210=NaN"},
-          "c94": {"label" : "minTemperatureToday", "type" : "float", "unit": "°F, 210=NaN"},
-          "c95": {"label" : "humdityTrend", "type" : "int", "unit": "0=steady, 1=rise, 2=fall"},
-          "c96": {"label" : "humdity", "type" : "int", "unit": "%, 210=NaN"},
-          "c97": {"label" : "maxHumdityToday", "type" : "int", "unit": "%"},
-          "c98": {"label" : "minHumdityToday", "type" : "int", "unit": "%"},
-          "c99": {"label" : "heatIndex", "type" : "float", "unit": "°F, 210=NaN"},
-          "c911": {"label" : "maxHeatIndexToday", "type" : "float", "unit": "°F, 210=NaN"},
-          "c912": {"label" : "minHeatIndexToday", "type" : "float", "unit": "°F, 210=NaN"},
-          "c913": {"label" : "dewPointTemperature", "type" : "float", "unit": "°F, 210=NaN"},
-          "c914": {"label" : "maxDewPointTemperatureToday", "type" : "float", "unit": "°F"},
-          "c915": {"label" : "minDewPointTemperatureToday", "type" : "float", "unit": "°F"}
+        "w9": { "_Comment_":  "indoor",
+          "c91": {"_Label_" : "temperature", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+          "c92": {"_Label_" : "temperatureTrend", "_Type_" : "int", "_Unit_": "0=steady, 1=rise, 2=fall"},
+          "c93": {"_Label_" : "maxTemperatureToday", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+          "c94": {"_Label_" : "minTemperatureToday", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+          "c95": {"_Label_" : "humdityTrend", "_Type_" : "int", "_Unit_": "0=steady, 1=rise, 2=fall"},
+          "c96": {"_Label_" : "humdity", "_Type_" : "int", "_Unit_": "%, 210=NaN"},
+          "c97": {"_Label_" : "maxHumdityToday", "_Type_" : "int", "_Unit_": "%"},
+          "c98": {"_Label_" : "minHumdityToday", "_Type_" : "int", "_Unit_": "%"},
+          "c99": {"_Label_" : "heatIndex", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+          "c911": {"_Label_" : "maxHeatIndexToday", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+          "c912": {"_Label_" : "minHeatIndexToday", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+          "c913": {"_Label_" : "dewPointTemperature", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+          "c914": {"_Label_" : "maxDewPointTemperatureToday", "_Type_" : "float", "_Unit_": "dgrF"},
+          "c915": {"_Label_" : "minDewPointTemperatureToday", "_Type_" : "float", "_Unit_": "dgrF"}
         },
-        "moonphase": {"label" : "moonphase", "type" : "int", "unit": "0=firstquarter, 1=fullmoon, 2=newmoon, 3=thirdquarter, 4=waningcrescent, 5=waninggibbous, 6=waxingcrescent, 7=waxinggibbous"}
+        "moonphase": {"_Label_" : "moonphase", "_Type_" : "int", "_Unit_": "0=firstquarter, 1=fullmoon, 2=newmoon, 3=thirdquarter, 4=waningcrescent, 5=waninggibbous, 6=waxingcrescent, 7=waxinggibbous"}
       },
       "outdoor": {
         "channel1": {
-          "w7": { "_COMMENT_":  "pm",
-            "c75": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c77": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c73": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c71": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c76": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c74": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c72": {"label" : "undefined", "type" : "int", "unit": "undefined"}
+          "w7": { "_Comment_":  "pm",
+            "c75": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c77": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c73": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c71": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c76": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c74": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c72": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"}
           },
-          "w1": { "_COMMENT_":  "general",
-            "c17": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c16": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c14": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c13": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c11": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c12": {"label" : "undefined", "type" : "int", "unit": "undefined"},
-            "c15": {"label" : "undefined", "type" : "int", "unit": "undefined"}
+          "w1": { "_Comment_":  "general",
+            "c17": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c16": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c14": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c13": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c11": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c12": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"},
+            "c15": {"_Label_" : "undefined", "_Type_" : "int", "_Unit_": "undefined"}
           },
-          "w5": { "_COMMENT_":  "pressure",
-            "c51": {"label" : "weather_forecast", "type" : "int", "unit": "0=partly, 1=rainy, 2=cloudy, 3=sunny, 4=storm, 5=snow, 210=NaN"},
-            "c52": {"label" : "pressure_trend", "type" : "int", "unit": "0=steady, 1=rise, 2=fall, 210=NaN"},
-            "c53": {"label" : "pressure", "type" : "float", "unit": "mBar, 210=NaN"}
+          "w5": { "_Comment_":  "pressure",
+            "c51": {"_Label_" : "weather_forecast", "_Type_" : "int", "_Unit_": "0=partly, 1=rainy, 2=cloudy, 3=sunny, 4=storm, 5=snow, 210=NaN"},
+            "c52": {"_Label_" : "pressure_trend", "_Type_" : "int", "_Unit_": "0=steady, 1=rise, 2=fall, 210=NaN"},
+            "c53": {"_Label_" : "pressure", "_Type_" : "float", "_Unit_": "mBar, 210=NaN"}
           },
-          "w4": { "_COMMENT_":  "rain",
-            "c41": {"label" : "today_accumulated_rainfall", "type" : "float", "unit": "mm, 210=NaN"},
-            "c42": {"label" : "rain_rate", "type" : "float", "unit": "mm/h, 210=NaN"},
-            "c43": {"label" : "rain_rate_max", "type" : "float", "unit": "mm/h, 210=NaN"},
-            "c44": {"label" : "past_accumulated_rainfall", "type" : "float", "unit": "mm, 210=NaN"}
+          "w4": { "_Comment_":  "rain",
+            "c41": {"_Label_" : "today_accumulated_rainfall", "_Type_" : "float", "_Unit_": "mm, 210=NaN"},
+            "c42": {"_Label_" : "rain_rate", "_Type_" : "float", "_Unit_": "mm/h, 210=NaN"},
+            "c43": {"_Label_" : "rain_rate_max", "_Type_" : "float", "_Unit_": "mm/h, 210=NaN"},
+            "c44": {"_Label_" : "past_accumulated_rainfall", "_Type_" : "float", "_Unit_": "mm, 210=NaN"}
           },
-          "w3": { "_COMMENT_":  "temperature_humidity",
-            "c31": {"label" : "temperature_reading", "type" : "float", "unit": "°F, 210=NaN"},
-            "c32": {"label" : "temperature_trend", "type" : "int", "unit": "0=steady, 1=rise, 2=fall"},
-            "c33": {"label" : "temperature_max", "type" : "float", "unit": "°F, 210=NaN"},
-            "c34": {"label" : "temperature_min", "type" : "float", "unit": "°F, 210=NaN"},
-            "c35": {"label" : "humidity_reading", "type" : "int", "unit": "%, 210=NaN"},
-            "c36": {"label" : "humidity_trend", "type" : "int", "unit": "0=steady, 1=rise, 2=fall"},
-            "c37": {"label" : "humidity_max", "type" : "int", "unit": "%"},
-            "c38": {"label" : "humidity_min", "type" : "int", "unit": "%"},
-            "c39": {"label" : "heat_index", "type" : "float", "unit": "°F, 210=NaN"},
-            "c311": {"label" : "heat_index_max", "type" : "float", "unit": "°F, 210=NaN"},
-            "c312": {"label" : "heat_index_min", "type" : "float", "unit": "°F, 210=NaN"},
-            "c313": {"label" : "dew_point_temperature", "type" : "float", "unit": "°F, 210=NaN"},
-            "c314": {"label" : "dew_point_max", "type" : "float", "unit": "°F"},
-            "c315": {"label" : "dew_point_min", "type" : "float", "unit": "°F"}
+          "w3": { "_Comment_":  "temperature_humidity",
+            "c31": {"_Label_" : "temperature_reading", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c32": {"_Label_" : "temperature_trend", "_Type_" : "int", "_Unit_": "0=steady, 1=rise, 2=fall"},
+            "c33": {"_Label_" : "temperature_max", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c34": {"_Label_" : "temperature_min", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c35": {"_Label_" : "humidity_reading", "_Type_" : "int", "_Unit_": "%, 210=NaN"},
+            "c36": {"_Label_" : "humidity_trend", "_Type_" : "int", "_Unit_": "0=steady, 1=rise, 2=fall"},
+            "c37": {"_Label_" : "humidity_max", "_Type_" : "int", "_Unit_": "%"},
+            "c38": {"_Label_" : "humidity_min", "_Type_" : "int", "_Unit_": "%"},
+            "c39": {"_Label_" : "heat_index", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c311": {"_Label_" : "heat_index_max", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c312": {"_Label_" : "heat_index_min", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c313": {"_Label_" : "dew_point_temperature", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c314": {"_Label_" : "dew_point_max", "_Type_" : "float", "_Unit_": "dgrF"},
+            "c315": {"_Label_" : "dew_point_min", "_Type_" : "float", "_Unit_": "dgrF"}
           },
-          "w2": { "_COMMENT_":  "wind",
-            "c21": {"label" : "gust_wind_speed", "type" : "float", "unit": "m/s, 210=NaN"},
-            "c22": {"label" : "average_wind_speed", "type" : "float", "unit": "m/s, 210=NaN"},
-            "c23": {"label" : "gust_wind_direction", "type" : "int", "unit": "0 to 15, 0=N, 4=E, 8=S, 12=W, 210=NaN"},
-            "c24": {"label" : "average_wind_direction", "type" : "int", "unit": "0 to 15, 0=N, 4=E, 8=S, 12=W"},
-            "c25": {"label" : "dominant_direction_last", "type" : "int", "unit": "0 to 15, 0=N, 4=E, 8=S, 12=W"},
-            "c26": {"label" : "wind_chill", "type" : "float", "unit": "°F, 210=NaN"},
-            "c27": {"label" : "today_min_wind_chill", "type" : "float", "unit": "°F, 210=NaN"},
-            "c28": {"label" : "wind_class", "type" : "int", "unit": "0=none, 1=light, 2=moderate, 3=strong, 4=storm, 210=NaN"},
-            "c29": {"label" : "today_max_gust_wind_speed", "type" : "float", "unit": "m/s"}
+          "w2": { "_Comment_":  "wind",
+            "c21": {"_Label_" : "gust_wind_speed", "_Type_" : "float", "_Unit_": "m/s, 210=NaN"},
+            "c22": {"_Label_" : "average_wind_speed", "_Type_" : "float", "_Unit_": "m/s, 210=NaN"},
+            "c23": {"_Label_" : "gust_wind_direction", "_Type_" : "int", "_Unit_": "0 to 15, 0=N, 4=E, 8=S, 12=W, 210=NaN"},
+            "c24": {"_Label_" : "average_wind_direction", "_Type_" : "int", "_Unit_": "0 to 15, 0=N, 4=E, 8=S, 12=W"},
+            "c25": {"_Label_" : "dominant_direction_last", "_Type_" : "int", "_Unit_": "0 to 15, 0=N, 4=E, 8=S, 12=W"},
+            "c26": {"_Label_" : "wind_chill", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c27": {"_Label_" : "today_min_wind_chill", "_Type_" : "float", "_Unit_": "dgrF, 210=NaN"},
+            "c28": {"_Label_" : "wind_class", "_Type_" : "int", "_Unit_": "0=none, 1=light, 2=moderate, 3=strong, 4=storm, 210=NaN"},
+            "c29": {"_Label_" : "today_max_gust_wind_speed", "_Type_" : "float", "_Unit_": "m/s"}
           }
         }
       }
@@ -189,7 +190,7 @@ As a rule, the values of interest have the keys with the naming format of `cXXX`
 For example, `["data"]["6"]["indoor"]["w9"]["c91"]` will contain the current indoor temperature.  
 
 ## 4. (OPTIONAL) Patch the device firmware
-To keep the WMR500 time and date synchronized, a HTTPS server is required to be deployed locally, so that a GET request to `https://app.idtlive.com/api/time/iso_8601` shall be responded with a payload of format `{"time":"2022-01-01 00:00:00+0"}`.  
+To keep the WMR500 time and date synchronized, a HTTPS server is required to be deployed locally, so that a GET request to `https://app.idtlive.com/api/time/iso_8601` shall be responded with a payload of format `{"time":"2023-01-01 00:00:00+0"}`.  
 In order to masquerade the original HTTPS server, the official [certificate private key](https://en.wikipedia.org/wiki/HTTPS#Server_setup) is mandatory to sign the local server's TLS connection - unfortunately this is not possible due to obvious security issues and lack of support from manufacturer.  
 The only solution is to modify the embedded software (firmware) on the WMR500 base station, so that it either:  
 - Uses a different public key (and/or certificate) to authenticate the local server. the key (certificate) will need to be updated each time the server setup changes,  
@@ -203,16 +204,18 @@ To perform the changes, the firmware onboard the WMR500's main microcontroller (
 - Reading the firmware using a SWD-compatible flasher, such as a [J-Link](https://www.segger.com/products/debug-probes/j-link/) or any [OpenOCD-compatible](https://openocd.org/pages/documentation.html) tool.   
 If using a J-Link, one may dump the full flash contents as a binary file by means of the included [command-line utility](https://wiki.segger.com/J-Link_Commander) via command `SaveBin C:\wmr500_firmware.bin 0x00 0x80000`.  
 - Once the firmware is obtained, using the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) tool for disassembly and analysis, parts of the instructions including those responsible for enabling TLS, are identified and patched.  
+
 See [chapter 7](#user-content-7-optional-further-firmware-analysis) for reproducing locally the workspace setup.  
 - Flashing the modified firmware on the WMR500 will enable the changes.  
 
 Notes:
 1. To obtain firmware version number, either:  
-	- check value of key `c82` in the response obtained when [requesting the measurement values](#user-content-3-request-the-measurement-values),  
+	- check value of key `c82` in the response obtained in [chapter 3](#user-content-3-request-the-measurement-values),  
 	- hold `select` and `up` buttons on the WMR500 for two seconds.  
-2. A non-modified firmware dump version v1490 is included [in this repo](firmware/wmr500_1490_original.bin), besides an [older](firmware/wmr500_1476_original.bin) version v1476.  
+2. A non-modified firmware dump version v1490 is included [in this repo](firmware/wmr500_1490_original.bin), besides an [older](firmware/wmr500_1476_original.bin) version `1476`.  
 
 <br>
+
 For a WMR500 that reports the firmware version as `1490`, there are two approaches to serving it the date and time, by either running a Python script:  
 
 - On any generic server/PC. If opening custom ports is not available in for eg. Home Assistant OS, this case requires an additional device to expose the service,  
@@ -230,7 +233,7 @@ The current Appdaemon implementation returns a JSON string with two whitespaces 
 
 Immediate value of Move Top instruction (`MOVW`), at address `0x0801b630` (responsible with setting the HTTP server port number), is to be replaced with the desired value (`1` to `65535` decimal). Factory default is `443`, while for the second approach the Appdaemon port is by default `5050`.  
 
-Two patched firmware images are present in this repo, for both [first](firmware/wmr500_1490_patched_generic.hex) (port 443) and [second](firmware/wmr500_1490_patched_appdaemon.hex) approach (port 5050).  
+Two patched firmware images are present in this repo, for both [first](firmware/wmr500_1490_patched_generic.hex) (port `443`) and [second](firmware/wmr500_1490_patched_appdaemon.hex) approach (port `5050`).  
 
 ## 5. (OPTIONAL) Configure the time server
 The following steps are applicable only for a WMR500 with a patched firmware, as per [chapter 4](#user-content-4-optional-patch-the-device-firmware).  
@@ -251,7 +254,7 @@ http_wmr500:
 
 ## 6. Configure the HomeAssistant instance
 - Add the following lines in `automations.yaml` file (present in the same configuration folder).  
-Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the automation), `trigger` (`minutes: /1` means every 60 seconds), and `_GUUID_` (WMR500's GUUID).  
+Take note of the values `_AUTOMATION_ID_` (random 13-digit value, unique to the automation), `trigger` (where `minutes: /1` means every 60 seconds), and `_GUUID_` (WMR500's GUUID).  
 ```
 - id: '_AUTOMATION_ID_'
   alias: WMR500_Update_Trigger
@@ -298,6 +301,30 @@ mqtt:
         state_class: measurement
         unit_of_measurement: "°F"
         expire_after: 180
+      - name: OUTDOOR_HEAT_INDEX
+        unique_id: "wmr500_outdoor_heat_index"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c39'] }}"
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°F"
+        expire_after: 180
+      - name: OUTDOOR_DEW_POINT
+        unique_id: "wmr500_outdoor_dew_point"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w3']['c313'] }}"
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°F"
+        expire_after: 180
+      - name: OUTDOOR_WIND_CHILL
+        unique_id: "wmr500_outdoor_wind_chill"
+        state_topic: "enno/in/json"
+        value_template: "{{ value_json['data']['6']['outdoor']['channel1']['w2']['c26'] }}"
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°F"
+        expire_after: 180
       - name: OUTDOOR_HUMID
         unique_id: "wmr500_outdoor_humid"
         state_topic: "enno/in/json"
@@ -330,6 +357,28 @@ mqtt:
         state_class: measurement
         unit_of_measurement: "hPa"
         expire_after: 180
+      - name: INDOOR_BATT
+        unique_id: "wmr500_indoor_batt"
+        state_topic: "enno/in/json"
+        value_template: >
+          {% set v = value_json['data']['6']['indoor']['w8']['c84'] %}
+          {% set n = 100 if v == 0 else 0 %}
+          {{ v }}
+        device_class: battery
+        state_class: measurement
+        unit_of_measurement: "%"
+        expire_after: 180
+      - name: OUTDOOR_BATT
+        unique_id: "wmr500_outdoor_batt"
+        state_topic: "enno/in/json"
+        value_template: >
+          {% set v = value_json['data']['6']['indoor']['w8']['c84'] %}
+          {% set n = 100 if v == 1 else 0 %}
+          {{ v }}
+        device_class: battery
+        state_class: measurement
+        unit_of_measurement: "%"
+        expire_after: 180
 ```
 
 - If all is well, after a HA restart the newly created sensors shall be available.
@@ -342,9 +391,9 @@ Hardware-wise, the WMR500's main logic is controlled by a [STM32F411RE](https://
 Based on memory content dumps, the external flash storage includes information such as user configuration (WiFi credentials, unit of measurements, etc.) and data statistics (min/max measurements, trends).  
 
 To further enhance the overall functionality by means of firmware analysis, one may setup a reverse-engineering environment, based on the [Ghidra](https://github.com/NationalSecurityAgency/ghidra) software solution.  
-Note: the following steps are for Ghidra [version 10.2.3](https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_10.2.3_build).  
+Note: the following steps are for Ghidra [version 10.4](https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_10.4_build).  
 - Once [installed and run](https://github.com/NationalSecurityAgency/ghidra#install), create a new non-shared Project via `File` -> `New project`.  
-- Using `File` -> `Import File`, select the binary file dumped in a [previous chapter](#user-content-4-optional-patch-the-device-firmware).  
+- Using `File` -> `Import File`, select the binary file dumped in a [chapter 4](#user-content-4-optional-patch-the-device-firmware).  
 - Based on the targeted microcontroller, select `Language` as `ARM v7 32 little default`, then in the `Options` menu on the bottom-left set name to `ROM` and base address to `80000000`, after which close both windows via `Ok`.
 - Double-click the newly imported file to open the main development window - click `No` if asked to begin analyzing.  
 - Via the `Window` top menu, select `Memory map`, then uncheck the `W` checkbox for the `ROM` area.  
@@ -357,10 +406,10 @@ Note: the following steps are for Ghidra [version 10.2.3](https://github.com/Nat
   - `Defined data` for variables and constants,  
   - `Defined strings` for constant strings (char arrays).  
 - Best starting point may be going through the in-code usage of various key strings, focusing on those that include keywords related to the target functionality (for eg. `TLS`, `socket`, `connected`, etc.).  
-One notable example is a hint given by string at address `0x80051ad8` - `Starting WICED v3.5.2`, which mentions the library used for network protocols - although deprecated around 2017, [backups](https://community.infineon.com/t5/Wi-Fi-Combo/WICED-Studio-5-2-0-has-been-released/td-p/74554s) could still be available.  
+One notable hint is the string at address `0x80051ad8` - `Starting WICED v3.5.2`, which mentions the library used for networking; although deprecated around 2017, [backups](https://community.infineon.com/t5/Wi-Fi-Combo/WICED-Studio-5-2-0-has-been-released/td-p/74554s) could still be available.  
 - Using the library source files, one may cross-reference the function structures of known libraries to the disassembled code (which may not contain useful debug symbols such as function names).  
 - Another method of understanding the inner workings is through blind debugging of the firmware dump image - if a variable (or function) is found to be of interest, one may set a breakpoint on it to evaluate it's value (or call context).  
 - Finally, due to the design of the firmware, debugging printout is available via the hardware serial port (3.3V-only), accessible on-board the WMR500 through the `ML_TX` pin.  
 
 # Who/where/when?
-All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (May 2023), and licensed under the GNU General Public License v3.0.
+All the reverse-engineering, development, integration, and documentation efforts are based on the latest software and hardware versions available at the time of writing (November 2023), and licensed under the GNU General Public License v3.0.
